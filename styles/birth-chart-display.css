@@ -166,3 +166,28 @@
     background: #6b7280;
   }
 }
+
+.birth-chart-list__item,
+.birth-chart-list__name,
+.birth-chart-list__position,
+.birth-chart-list__house,
+.birth-chart-list__zodiac {
+  opacity: 1 !important;
+  color: #222 !important;
+}
+
+.birth-chart-list__name { color: #222 !important; }
+.birth-chart-list__position { color: #222 !important; }
+.birth-chart-list__house { color: #222 !important; font-weight: 600 !important; }
+.birth-chart-list__zodiac { color: #666 !important; }
+.birth-chart-display__title { color: #111827 !important; }
+
+@media (prefers-color-scheme: dark) {
+  .birth-chart-list__name,
+  .birth-chart-list__position,
+  .birth-chart-list__house,
+  .birth-chart-list__zodiac {
+    color: #020202 !important;
+  }
+  .birth-chart-list__zodiac { color: #080808 !important; }
+}
