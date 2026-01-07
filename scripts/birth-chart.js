@@ -86,9 +86,7 @@ if (! chart.sun || !chart.moon) {
   throw new Error('Failed to calculate planetary positions');
 }
 
-// Calculate houses (Placidus system)
-console.log('🏠 Calculating Placidus houses...');
-const houses = calculateHouses(birthDateTimeUTC, latitude, longitude);
+
 
 if (houses) {
   chart.ascendant = houses. ascendant;
@@ -170,9 +168,11 @@ console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign.padEnd(
     throw new Error('Failed to calculate planetary positions');
   }
   
-  // Calculate houses (Placidus system)
+
+  // Calculate houses (Placidus system)  
   console.log('🏠 Calculating Placidus houses...');
   const houses = calculateHouses(birthDateTimeUTC, latitude, longitude);
+
   
   if (houses) {
     chart.ascendant = houses. ascendant;
@@ -187,7 +187,7 @@ console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign.padEnd(
     chart. houseSystem = 'Unknown';
   }
   
-  console.log('✅ Birth chart calculated! ');
+console.log('✅ Birth chart calculated! ');
 console.log('');
 console.log('═══════════════════════════════════════');
 console.log('          🌟 BIRTH CHART 🌟');
