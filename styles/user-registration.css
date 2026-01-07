@@ -1,0 +1,14 @@
+
+[data-dialog="user-registration"] {
+  max-width: 500px;
+}
+
+[data-dialog="user-registration"] .dialog__title {
+  text-align: center;
+  color: #2563eb;
+  font-size:  1.5rem;
+}
+
+[data-dialog="user-registration"] .form__field {
+  margin-bottom: 1rem;
+}
