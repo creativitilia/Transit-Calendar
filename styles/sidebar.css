@@ -14,34 +14,3 @@
   font-weight: 500;
 }
 
-/* Resizable Sidebar */
-.sidebar {
-  position: relative;
-  min-width: 200px;
-  max-width:  500px;
-  width: 256px; /* Default width */
-}
-
-.sidebar__resize-handle {
-  position: absolute;
-  top: 0;
-  right:  0;
-  width: 4px;
-  height: 100%;
-  background-color: transparent;
-  cursor: ew-resize;
-  z-index:  10;
-  transition: background-color 0.2s ease;
-}
-
-.sidebar__resize-handle:hover {
-  background-color: var(--color-primary, #2563eb);
-}
-
-.sidebar__resize-handle.is-resizing {
-  background-color:  var(--color-primary, #2563eb);
-}
-
-.sidebar {
-  flex-shrink: 0; /* Prevent sidebar from shrinking */
-}

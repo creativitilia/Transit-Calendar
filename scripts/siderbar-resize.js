@@ -5,11 +5,10 @@
 
 const SIDEBAR_MIN_WIDTH = 200;
 const SIDEBAR_MAX_WIDTH = 500;
-const SIDEBAR_DEFAULT_WIDTH = 256;
 const STORAGE_KEY = 'sidebarWidth';
 
-export function initSidebarResize() {
-  const sidebar = document. querySelector('.sidebar');
+function initSidebarResize() {
+  const sidebar = document.querySelector('.sidebar');
   const resizeHandle = document.querySelector('[data-sidebar-resize-handle]');
   
   if (!sidebar || !resizeHandle) {
@@ -31,14 +30,14 @@ export function initSidebarResize() {
   let startWidth = 0;
   
   // Mouse down on resize handle
-  resizeHandle.addEventListener('mousedown', (e) => {
+  resizeHandle. addEventListener('mousedown', (e) => {
     isResizing = true;
     startX = e.clientX;
     startWidth = sidebar.offsetWidth;
     
     resizeHandle.classList.add('is-resizing');
     document.body.style.cursor = 'ew-resize';
-    document.body.style.userSelect = 'none'; // Prevent text selection while dragging
+    document.body.style.userSelect = 'none';
     
     e.preventDefault();
   });
@@ -62,7 +61,7 @@ export function initSidebarResize() {
     
     isResizing = false;
     resizeHandle.classList.remove('is-resizing');
-    document.body.style. cursor = '';
+    document.body.style.cursor = '';
     document.body.style. userSelect = '';
     
     // Save width to localStorage
