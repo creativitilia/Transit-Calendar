@@ -5,7 +5,8 @@
 
 import { calculateBirthChart, exportChartAsJSON } from './birth-chart.js';
 import { PLANET_SYMBOLS } from './astrology-core.js';
-import { promptForTimezoneOffset, estimateTimezoneOffset } from './timezone-helper.js';
+import { promptForTimezoneOffset, estimateTimezoneOffset } from '.timezone-helper.js';
+import { displayBirthChart } from './birth-chart-display.js';
 
 // Helper functions for birth chart storage
 function saveBirthChart(chart) {
@@ -59,6 +60,8 @@ async function handleRegistrationSubmit(event) {
   
   // Validate that location was selected
   if (!formData.birthLat || ! formData.birthLon || isNaN(formData.birthLat) || isNaN(formData.birthLon)) {
+    saveBirthChart(birthChart);
+    displayBirthChart(birthChart);  // ← ADD THIS LINE
     alert('Please select a location from the dropdown suggestions.');
     return;
   }
@@ -267,7 +270,7 @@ function showRegistrationDialog() {
 }
 
 function displayWelcomeMessage() {
-  const userData = localStorage. getItem('userRegistrationData');
+  const userData = localStorage.getItem('userRegistrationData');
   if (userData) {
     const user = JSON.parse(userData);
     console.log(`Welcome back, ${user.name}!  🌟`);
@@ -275,9 +278,10 @@ function displayWelcomeMessage() {
     // Load and display birth chart info
     const birthChart = loadBirthChart();
     if (birthChart) {
-      console.log(`  ${PLANET_SYMBOLS.sun} Sun:  ${birthChart.sun.degree}° ${birthChart.sun.sign}`);
-      console.log(`  ${PLANET_SYMBOLS.moon} Moon: ${birthChart.moon. degree}° ${birthChart.moon.sign}`);
-      console.log(`  ⬆ Ascendant: ${birthChart. ascendant.degree}° ${birthChart.ascendant.sign}`);
+      displayBirthChart(birthChart);  // ← THIS IS THE NEW LINE
+      console.log(`  ${PLANET_SYMBOLS.sun} Sun: ${birthChart.sun.degree}° ${birthChart. sun.sign}`);
+      console.log(`  ${PLANET_SYMBOLS.moon} Moon: ${birthChart.moon.degree}° ${birthChart.moon.sign}`);
+      console.log(`  ⬆ Ascendant: ${birthChart.ascendant.degree}° ${birthChart.ascendant.sign}`);
     }
   }
 }
