@@ -3,7 +3,7 @@
 // Uses Astronomy Engine
 // ============================================
 
-import { PLANET_SYMBOLS } from './astrology-core.js';
+import { PLANET_SYMBOLS } from './astrology-core. js';
 import {
   initAstronomy,
   calculatePlanetPosition,
@@ -46,19 +46,20 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   // Create UTC date by adjusting for timezone offset
   // If birth time is 13:20 in UTC+1, UTC time is 12:20
   const utcHour = hour - timezoneOffset;
-  const birthDateTimeUTC = new Date(Date.UTC(year, month - 1, day, utcHour, minute, 0));
+  const utcTimestamp = Date.UTC(year, month - 1, day, utcHour, minute, 0);
+  const birthDateTimeUTC = new Date(utcTimestamp);
   
-  console.log(`  Timezone offset: UTC${timezoneOffset >= 0 ? '+' : ''}${timezoneOffset}`);
+  console.log(`  Timezone offset: UTC${timezoneOffset >= 0 ? '+' :  ''}${timezoneOffset}`);
   console.log(`  Local DateTime: ${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
   console.log(`  UTC DateTime: ${birthDateTimeUTC.toISOString()}`);
   
   const chart = {
     metadata: {
       date: birthDate,
-      time: birthTime,
+      time:  birthTime,
       latitude: latitude,
       longitude: longitude,
-      timezoneOffset:  timezoneOffset,
+      timezoneOffset: timezoneOffset,
       calculatedAt: new Date().toISOString(),
       localDateTime: `${birthDate}T${birthTime}: 00`,
       utcDateTime: birthDateTimeUTC.toISOString()
@@ -66,7 +67,7 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   };
   
   // Calculate planetary positions
-  console.log('🪐 Calculating planetary positions...');
+  console.log('🪐 Calculating planetary positions.. .');
   chart.sun = calculatePlanetPosition('Sun', birthDateTimeUTC);
   chart.moon = calculatePlanetPosition('Moon', birthDateTimeUTC);
   chart.mercury = calculatePlanetPosition('Mercury', birthDateTimeUTC);
@@ -91,22 +92,22 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
     chart.ascendant = houses. ascendant;
     chart. midheaven = houses.midheaven;
     chart.houses = houses.houses;
-    chart.houseSystem = 'Placidus';
+    chart. houseSystem = 'Placidus';
   } else {
     console.error('❌ House calculation failed');
-    chart.ascendant = { sign: 'Aries', degree: '0.00', absoluteDegree: 0 };
+    chart.ascendant = { sign: 'Aries', degree:  '0.00', absoluteDegree: 0 };
     chart.midheaven = { sign: 'Capricorn', degree: '0.00', absoluteDegree: 270 };
     chart.houses = [];
-    chart.houseSystem = 'Unknown';
+    chart. houseSystem = 'Unknown';
   }
   
-  console.log('✅ Birth chart calculated!');
-  console.log(`  ☉ Sun: ${chart.sun. degree}° ${chart.sun. sign}`);
+  console.log('✅ Birth chart calculated! ');
+  console.log(`  ☉ Sun: ${chart.sun.degree}° ${chart.sun.sign}`);
   console.log(`  ☽ Moon: ${chart.moon. degree}° ${chart.moon. sign}`);
-  console.log(`  ⬆ Ascendant:  ${chart.ascendant.degree}° ${chart.ascendant.sign}`);
-  console.log(`  ⬆ Midheaven:  ${chart.midheaven.degree}° ${chart. midheaven.sign}`);
+  console.log(`  ⬆ Ascendant: ${chart.ascendant.degree}° ${chart.ascendant.sign}`);
+  console.log(`  ⬆ Midheaven: ${chart.midheaven. degree}° ${chart.midheaven.sign}`);
   
-  if (chart.houses. length === 12) {
+  if (chart.houses.length === 12) {
     console.log('  🏠 All 12 house cusps calculated');
   }
   
@@ -130,7 +131,7 @@ export function saveBirthChart(chart) {
  */
 export function loadBirthChart() {
   try {
-    const stored = localStorage.getItem('birthChart');
+    const stored = localStorage. getItem('birthChart');
     if (stored) {
       console.log('📂 Birth chart loaded from localStorage');
       return JSON.parse(stored);
@@ -149,9 +150,9 @@ export function formatBirthChart(chart) {
   
   let text = `🌟 Birth Chart\n\n`;
   text += `📅 Date: ${chart.metadata.date}\n`;
-  text += `⏰ Time: ${chart.metadata.time} (Local)\n`;
-  text += `📍 Location: ${chart. metadata.latitude}°, ${chart.metadata.longitude}°\n`;
-  text += `🌍 Timezone: UTC${chart.metadata.timezoneOffset >= 0 ? '+' : ''}${chart.metadata. timezoneOffset}\n\n`;
+  text += `⏰ Time: ${chart.metadata. time} (Local)\n`;
+  text += `📍 Location: ${chart.metadata.latitude}°, ${chart.metadata.longitude}°\n`;
+  text += `🌍 Timezone: UTC${chart.metadata.timezoneOffset >= 0 ?  '+' : ''}${chart. metadata.timezoneOffset}\n\n`;
   
   text += `Planets:\n`;
   text += `☉ Sun: ${chart.sun.degree}° ${chart.sun.sign}\n`;
@@ -166,10 +167,10 @@ export function formatBirthChart(chart) {
   text += `♇ Pluto: ${chart. pluto.degree}° ${chart.pluto.sign}\n\n`;
   
   text += `Angles:\n`;
-  text += `⬆ Ascendant: ${chart.ascendant. degree}° ${chart.ascendant.sign}\n`;
-  text += `⬆ Midheaven: ${chart.midheaven.degree}° ${chart.midheaven.sign}\n`;
+  text += `⬆ Ascendant:  ${chart.ascendant.degree}° ${chart.ascendant.sign}\n`;
+  text += `⬆ Midheaven: ${chart.midheaven.degree}° ${chart. midheaven.sign}\n`;
   
-  if (chart.houses && chart.houses.length === 12) {
+  if (chart. houses && chart.houses.length === 12) {
     text += `\n🏠 Houses (${chart.houseSystem}):\n`;
     chart.houses.forEach((house, i) => {
       text += `  House ${i + 1}: ${house.degree}° ${house.sign}\n`;
@@ -179,4 +180,4 @@ export function formatBirthChart(chart) {
   return text;
 }
 
-console.log('🌟 Birth Chart module loaded!');
+console.log('🌟 Birth Chart module loaded! ');
