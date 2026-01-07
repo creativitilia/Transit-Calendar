@@ -51,21 +51,11 @@ export function calculatePlanetPosition(bodyName, date) {
   }
   
   try {
-    // Create AstroTime from Date components
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1; // JS months are 0-indexed
-    const day = date.getDate();
-    const hour = date.getHours();
-    const minute = date.getMinutes();
-    const second = date.getSeconds();
-    
-    // Create AstroTime object properly
-    const astroTime = new window. Astronomy.AstroTime(
-      new Date(Date.UTC(year, month - 1, day, hour, minute, second))
-    );
+    // MakeTime expects a JavaScript Date object directly! 
+    const astroTime = window.Astronomy.MakeTime(date);
     
     // Get ecliptic coordinates
-    const ecliptic = window.Astronomy.Ecliptic(bodyName, astroTime);
+    const ecliptic = window.Astronomy. Ecliptic(bodyName, astroTime);
     
     // ecliptic. elon is ecliptic longitude (0-360)
     let longitude = ecliptic.elon;
