@@ -84,14 +84,15 @@
 }
 
 /* House Number */
+/* House Number */
 .birth-chart-list__house {
-  color: var(--color-text-tertiary, #9ca3af);
+  color: #111827;  /* Black text */
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight:  500;
   min-width: 32px;
   text-align: right;
-  background-color: var(--color-background-secondary, #f9fafb);
-  padding: 0.125rem 0.375rem;
+  background-color: transparent;  /* No background */
+  padding:  0.125rem 0.375rem;
   border-radius:  4px;
 }
 
@@ -147,13 +148,11 @@
     color: #d1d5db;
   }
   
-  /* House Number */
-  .birth-chart-list__house {
-    color: #111827;  /* Changed to black */
-    background-color: transparent;  /* Changed from gray background */
-    padding: 0.125rem 0.375rem;
-    border-radius:  4px;
-  }
+  /* House Number  */
+.birth-chart-list__house {
+  color: #f9fafb;  /* White text for dark mode */
+  background-color: transparent;
+}
     
   .birth-chart-list__zodiac {
     color: #9ca3af;
