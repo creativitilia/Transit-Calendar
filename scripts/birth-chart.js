@@ -1,5 +1,5 @@
-import { initAstronomy, calculatePlanetPosition, calculateHouses } from './astronomy.js';
-import { getTimezoneOffset } from './timezone-api.js';
+import { initAstronomy, calculatePlanetPosition, calculateHouses } from './ephemeris.js';
+import { getTimezoneOffset } from './timezone-helper.js';
 
 // Constants
 const ORBS = {
@@ -8,7 +8,7 @@ const ORBS = {
   trine: 8,
   square: 7,
   sextile: 6,
-  inconjunct: 3
+  inconjunct:  3
 };
 
 const HOUSE_KEYWORDS = {
@@ -75,7 +75,7 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   
   // Parse date and time
   const [year, month, day] = birthDate.split('-').map(Number);
-  const [hour, minute] = birthTime.split(':').map(Number);
+  const [hour, minute] = birthTime. split(':').map(Number);
   
   // Create UTC date by adjusting for timezone offset
   const utcHour = hour - timezoneOffset;
@@ -118,7 +118,7 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   }
   
   // Calculate houses (Placidus system)
-  console.log('🏠 Calculating Placidus houses...');
+  console.log('🏠 Calculating Placidus houses.. .');
   const houses = calculateHouses(birthDateTimeUTC, latitude, longitude);
   
   if (houses) {
@@ -131,7 +131,7 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
     const houseCuspDegrees = houses.houses.map(h => h.absoluteDegree);
     
     // Assign house numbers to each planet
-    chart.sun.house = getPlanetHouse(chart.sun.absoluteDegree, houseCuspDegrees);
+    chart.sun. house = getPlanetHouse(chart.sun.absoluteDegree, houseCuspDegrees);
     chart.moon.house = getPlanetHouse(chart.moon.absoluteDegree, houseCuspDegrees);
     chart.mercury.house = getPlanetHouse(chart.mercury.absoluteDegree, houseCuspDegrees);
     chart.venus.house = getPlanetHouse(chart.venus.absoluteDegree, houseCuspDegrees);
@@ -142,16 +142,16 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
     chart.neptune.house = getPlanetHouse(chart.neptune.absoluteDegree, houseCuspDegrees);
     chart.pluto.house = getPlanetHouse(chart.pluto.absoluteDegree, houseCuspDegrees);
     
-    console.log('✅ Planet houses assigned!');
+    console.log('✅ Planet houses assigned! ');
   } else {
     console.error('❌ House calculation failed');
-    chart.ascendant = { sign: 'Aries', degree: '0.00', absoluteDegree: 0 };
+    chart.ascendant = { sign: 'Aries', degree: '0. 00', absoluteDegree: 0 };
     chart.midheaven = { sign: 'Capricorn', degree: '0.00', absoluteDegree: 270 };
     chart.houses = [];
     chart.houseSystem = 'Unknown';
   }
   
-  console.log('✅ Birth chart calculated!');
+  console.log('✅ Birth chart calculated! ');
   console.log('');
   console.log('═══════════════════════════════════════');
   console.log('          🌟 BIRTH CHART 🌟');
@@ -160,23 +160,23 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   console.log('📅 Birth Data:');
   console.log(`   Date: ${chart.metadata.date}`);
   console.log(`   Time: ${chart.metadata.time} (Local)`);
-  console.log(`   Timezone: UTC${chart.metadata.timezoneOffset >= 0 ? '+' : ''}${chart.metadata.timezoneOffset}`);
+  console.log(`   Timezone: UTC${chart.metadata.timezoneOffset >= 0 ? '+' : ''}${chart.metadata. timezoneOffset}`);
   console.log(`   Location: ${chart.metadata.latitude}°, ${chart.metadata.longitude}°`);
   console.log('');
-  console.log('🪐 Planets:');
-  console.log(`   ☉ Sun       ${chart.sun.degree}° ${chart.sun.sign.padEnd(11)} House ${chart.sun.house}`);
-  console.log(`   ☽ Moon      ${chart.moon.degree}° ${chart.moon.sign.padEnd(11)} House ${chart.moon.house}`);
+  console.log('🪐 Planets: ');
+  console.log(`   ☉ Sun       ${chart.sun.degree}° ${chart.sun.sign. padEnd(11)} House ${chart.sun.house}`);
+  console.log(`   ☽ Moon      ${chart.moon.degree}° ${chart.moon.sign.padEnd(11)} House ${chart.moon. house}`);
   console.log(`   ☿ Mercury   ${chart.mercury.degree}° ${chart.mercury.sign.padEnd(11)} House ${chart.mercury.house}`);
   console.log(`   ♀ Venus     ${chart.venus.degree}° ${chart.venus.sign.padEnd(11)} House ${chart.venus.house}`);
   console.log(`   ♂ Mars      ${chart.mars.degree}° ${chart.mars.sign.padEnd(11)} House ${chart.mars.house}`);
-  console.log(`   ♃ Jupiter   ${chart.jupiter.degree}° ${chart.jupiter.sign.padEnd(11)} House ${chart.jupiter.house}`);
+  console.log(`   ♃ Jupiter   ${chart.jupiter.degree}° ${chart.jupiter.sign.padEnd(11)} House ${chart.jupiter. house}`);
   console.log(`   ♄ Saturn    ${chart.saturn.degree}° ${chart.saturn.sign.padEnd(11)} House ${chart.saturn.house}`);
-  console.log(`   ♅ Uranus    ${chart.uranus.degree}° ${chart.uranus.sign.padEnd(11)} House ${chart.uranus.house}`);
-  console.log(`   ♆ Neptune   ${chart.neptune.degree}° ${chart.neptune.sign.padEnd(11)} House ${chart.neptune.house}`);
+  console.log(`   ♅ Uranus    ${chart.uranus.degree}° ${chart. uranus.sign.padEnd(11)} House ${chart.uranus.house}`);
+  console.log(`   ♆ Neptune   ${chart.neptune.degree}° ${chart.neptune. sign.padEnd(11)} House ${chart.neptune.house}`);
   console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign.padEnd(11)} House ${chart.pluto.house}`);
   console.log('');
   console.log('📐 Angles:');
-  console.log(`   ⬆ Ascendant (ASC)  ${chart.ascendant.degree}° ${chart.ascendant.sign}`);
+  console.log(`   ⬆ Ascendant (ASC)  ${chart.ascendant.degree}° ${chart. ascendant.sign}`);
   console.log(`   ⬆ Midheaven (MC)   ${chart.midheaven.degree}° ${chart.midheaven.sign}`);
   console.log('');
   
@@ -193,26 +193,26 @@ export function calculateAspects(chart) {
   
   const planets = [
     { name: 'Sun', data: chart.sun },
-    { name: 'Moon', data: chart.moon },
+    { name: 'Moon', data:  chart.moon },
     { name: 'Mercury', data: chart.mercury },
-    { name: 'Venus', data: chart.venus },
+    { name: 'Venus', data: chart. venus },
     { name: 'Mars', data: chart.mars },
     { name: 'Jupiter', data: chart.jupiter },
     { name: 'Saturn', data: chart.saturn },
     { name: 'Uranus', data: chart.uranus },
     { name: 'Neptune', data: chart.neptune },
-    { name: 'Pluto', data: chart.pluto }
+    { name: 'Pluto', data: chart. pluto }
   ];
   
   const aspects = [];
   
   // Compare each planet with every other planet
-  for (let i = 0; i < planets.length; i++) {
+  for (let i = 0; i < planets. length; i++) {
     for (let j = i + 1; j < planets.length; j++) {
       const planet1 = planets[i];
       const planet2 = planets[j];
       
-      if (!planet1.data || !planet2.data) continue;
+      if (! planet1.data || !planet2.data) continue;
       
       const angle = calculateAspectAngle(
         planet1.data.absoluteDegree,
@@ -225,13 +225,13 @@ export function calculateAspects(chart) {
         aspects.push({
           planet1: planet1.name,
           planet2: planet2.name,
-          type: aspectType.name,
-          angle: angle.toFixed(2),
-          orb: aspectType.orb.toFixed(2),
+          type: aspectType. name,
+          angle: angle. toFixed(2),
+          orb: aspectType.orb. toFixed(2),
           symbol: aspectType.symbol
         });
         
-        console.log(`  ${planet1.name} ${aspectType.symbol} ${planet2.name} (${angle.toFixed(1)}°, orb: ${aspectType.orb.toFixed(1)}°)`);
+        console. log(`  ${planet1.name} ${aspectType.symbol} ${planet2.name} (${angle.toFixed(1)}°, orb: ${aspectType.orb. toFixed(1)}°)`);
       }
     }
   }
@@ -252,10 +252,10 @@ function calculateAspectAngle(deg1, deg2) {
 // Determine what type of aspect exists (if any) given an angle
 function determineAspectType(angle) {
   const aspects = [
-    { name: 'Conjunction', target: 0, maxOrb: ORBS.conjunction, symbol: '☌' },
-    { name: 'Opposition', target: 180, maxOrb: ORBS.opposition, symbol: '☍' },
+    { name: 'Conjunction', target: 0, maxOrb:  ORBS.conjunction, symbol: '☌' },
+    { name: 'Opposition', target: 180, maxOrb: ORBS. opposition, symbol: '☍' },
     { name: 'Trine', target: 120, maxOrb: ORBS.trine, symbol: '△' },
-    { name: 'Square', target: 90, maxOrb: ORBS.square, symbol: '□' },
+    { name: 'Square', target: 90, maxOrb: ORBS. square, symbol: '□' },
     { name: 'Sextile', target: 60, maxOrb: ORBS.sextile, symbol: '⚹' },
     { name: 'Inconjunct', target: 150, maxOrb: ORBS.inconjunct, symbol: '⚻' }
   ];
@@ -277,7 +277,6 @@ function determineAspectType(angle) {
 // Export chart as JSON
 export function exportChartAsJSON(chart) {
   return JSON.stringify(chart, null, 2);
-<<<<<<< HEAD
 }
 
 // Get house interpretation
@@ -285,11 +284,4 @@ export function getHouseInterpretation(houseNumber) {
   return HOUSE_KEYWORDS[houseNumber] || 'Unknown house';
 }
 
-=======
-}
-
-// Get house interpretation
-export function getHouseInterpretation(houseNumber) {
-  return HOUSE_KEYWORDS[houseNumber] || 'Unknown house';
-}
->>>>>>> d1b3db1f3cb15b0acedbcf824ba6676e4baae10f
+console.log('🌟 Birth Chart module loaded! ');
