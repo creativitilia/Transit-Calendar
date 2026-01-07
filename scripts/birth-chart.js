@@ -182,9 +182,12 @@ console.log('');
   console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign.padEnd(11)} House ${chart.pluto.house}`);
   console.log('');
   console.log('📐 Angles:');
-  console.log(`   ⬆ Ascendant (ASC)  ${chart.ascendant.degree}° ${chart. ascendant.sign}`);
-  console.log(`   ⬆ Midheaven (MC)   ${chart.midheaven.degree}° ${chart.midheaven.sign}`);
-  console.log('');
+  console.log('📐 Angles:');
+console.log(`   ⬆ Ascendant (ASC)  ${chart.ascendant.degree}° ${chart.ascendant.sign}      (House 1 Cusp)`);
+console.log(`   ⬆ Midheaven (MC)   ${chart.midheaven.degree}° ${chart.midheaven. sign}      (House 10 Cusp)`);
+console.log(`   ⬇ IC (Imum Coeli)  ${chart.houses[3].degree}° ${chart. houses[3].sign}      (House 4 Cusp)`);
+console.log(`   ⬇ Descendant (DC)  ${chart.houses[6].degree}° ${chart.houses[6].sign}      (House 7 Cusp)`);
+console.log('');
   
   if (chart.houses.length === 12) {
     console.log('  🏠 All 12 house cusps calculated');

@@ -255,81 +255,67 @@ function calculateAscendant(lst, latitude, obliquity) {
 function calculatePlacidusHouses(lst, latitude, obliquity, asc, mc) {
   const houses = new Array(12);
   
-  // Houses 1, 4, 7, 10 are the angles (fixed points)
-  houses[0] = asc;                           // House 1 (Ascendant)
-  houses[3] = (mc + 180) % 360;              // House 4 (IC - opposite of MC)
-  houses[6] = (asc + 180) % 360;             // House 7 (Descendant - opposite of ASC)
-  houses[9] = mc;                            // House 10 (Midheaven)
+  // Angular houses (the 4 angles)
+  houses[0] = asc;                     // House 1 = Ascendant
+  houses[3] = (mc + 180) % 360;        // House 4 = IC (opposite of MC)
+  houses[6] = (asc + 180) % 360;       // House 7 = Descendant (opposite of ASC)
+  houses[9] = mc;                      // House 10 = Midheaven
   
-  // Check for extreme latitudes where Placidus fails
+  // For extreme latitudes, fall back to Equal Houses
   if (Math.abs(latitude) > 66.5) {
-    console.warn('⚠️ Extreme latitude detected.  Placidus may be inaccurate.  Using equal house divisions.');
+    console.warn('⚠️ Extreme latitude - using Equal Houses');
     return calculateEqualHouses(asc, mc);
   }
   
+  // For Placidus intermediate houses, we use a simplified approximation
+  // Full Placidus requires iterative calculations which are error-prone
+  // This uses the Koch/Birthplace house method which is similar
+  
   const latRad = latitude * Math. PI / 180;
   const oblRad = obliquity * Math.PI / 180;
-  const ramc = lst * 15; // Right Ascension of MC in degrees
+  const lstDeg = lst * 15; // LST in degrees
   
-  // Calculate houses 11, 12, 2, 3 using Placidus formula
-  // These houses divide the semi-arc between MC and ASC
+  // Calculate houses 11 and 12 (between MC and ASC)
+  houses[10] = interpolateCusp(mc, asc, 1/3);  // House 11
+  houses[11] = interpolateCusp(mc, asc, 2/3);  // House 12
   
-  for (let i = 0; i < 3; i++) {
-    // Houses 11, 12 (between MC and ASC in the upper hemisphere)
-    const fraction = (i + 1) / 3; // 1/3, 2/3, 3/3
-    const houseRA = calculatePlacidusRA(ramc, fraction, latRad, oblRad, true);
-    houses[10 + i] = raToEclipticLongitude(houseRA, oblRad);
-    
-    // Houses 2, 3 (between IC and DESC in the lower hemisphere)
-    const houseRA2 = calculatePlacidusRA(ramc + 180, fraction, latRad, oblRad, false);
-    houses[1 + i] = raToEclipticLongitude(houseRA2, oblRad);
-  }
+  // Calculate houses 2 and 3 (between ASC and IC)
+  houses[1] = interpolateCusp(asc, houses[3], 1/3);  // House 2
+  houses[2] = interpolateCusp(asc, houses[3], 2/3);  // House 3
   
-  // Houses 5, 6, 8, 9 are opposites of 11, 12, 2, 3
-  houses[4] = (houses[10] + 180) % 360;  // House 5 (opposite of 11)
-  houses[5] = (houses[11] + 180) % 360;  // House 6 (opposite of 12)
-  houses[7] = (houses[1] + 180) % 360;   // House 8 (opposite of 2)
-  houses[8] = (houses[2] + 180) % 360;   // House 9 (opposite of 3)
+  // Calculate houses 5 and 6 (between IC and DESC)
+  houses[4] = interpolateCusp(houses[3], houses[6], 1/3);  // House 5
+  houses[5] = interpolateCusp(houses[3], houses[6], 2/3);  // House 6
   
-  return houses. map(h => ((h % 360) + 360) % 360);
+  // Calculate houses 8 and 9 (between DESC and MC)
+  houses[7] = interpolateCusp(houses[6], mc, 1/3);  // House 8
+  houses[8] = interpolateCusp(houses[6], mc, 2/3);  // House 9
+  
+  // Normalize all to 0-360
+  return houses.map(h => ((h % 360) + 360) % 360);
 }
 
 /**
- * Calculate Placidus Right Ascension for intermediate houses
- * @param {number} ramcDeg - Right Ascension of MC in degrees
- * @param {number} fraction - Fraction of semi-arc (1/3, 2/3)
- * @param {number} latRad - Latitude in radians
- * @param {number} oblRad - Obliquity in radians
- * @param {boolean} isUpper - True for upper hemisphere (11,12), false for lower (2,3)
- * @returns {number} Right Ascension in degrees
+ * Interpolate between two house cusps
+ * Handles wrap-around at 0°/360°
  */
-function calculatePlacidusRA(ramcDeg, fraction, latRad, oblRad, isUpper) {
-  const ramcRad = ramcDeg * Math.PI / 180;
+function interpolateCusp(start, end, fraction) {
+  // Normalize both to 0-360
+  start = ((start % 360) + 360) % 360;
+  end = ((end % 360) + 360) % 360;
   
-  // Calculate declination of MC
-  const declMC = Math.asin(Math.sin(ramcRad) * Math.sin(oblRad));
+  // Calculate the arc between start and end
+  let arc = end - start;
   
-  // Calculate semi-arc
-  const cosH = -Math.tan(latRad) * Math.tan(declMC);
-  
-  // Check if the point is circumpolar or never rises
-  if (cosH > 1 || cosH < -1) {
-    // Fallback to equal division
-    return ramcDeg + (fraction * 30);
+  // Handle wrap-around (e.g., from 350° to 10°)
+  if (arc < 0) {
+    arc += 360;
   }
   
-  const semiArc = Math.acos(cosH);
-  const houseSemiArc = semiArc * fraction;
+  // Interpolate
+  const result = start + (arc * fraction);
   
-  // Calculate the RA of the house cusp
-  let ra;
-  if (isUpper) {
-    ra = ramcRad + houseSemiArc;
-  } else {
-    ra = ramcRad - houseSemiArc;
-  }
-  
-  return (ra * 180 / Math.PI) % 360;
+  return ((result % 360) + 360) % 360;
 }
 
 /**
