@@ -43,7 +43,7 @@ async function handleRegistrationSubmit(event) {
   };
   
   // Validate that location was selected
-  if (!formData. birthLat || !formData. birthLon) {
+  if (!formData.birthLat || ! formData.birthLon || isNaN(formData.birthLat) || isNaN(formData.birthLon)) {
     alert('Please select a location from the dropdown suggestions.');
     return;
   }
