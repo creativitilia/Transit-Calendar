@@ -230,11 +230,14 @@ function calculateAscendant(lst, latitude, obliquity) {
   const latRad = latitude * Math.PI / 180;
   const oblRad = obliquity * Math.PI / 180;
   
-  // Standard formula for Ascendant (works for all house systems)
+  // Standard formula for Ascendant
   const y = -Math.cos(lstRad);
   const x = Math.sin(lstRad) * Math.cos(oblRad) + Math.tan(latRad) * Math.sin(oblRad);
   
   let asc = Math.atan2(y, x) * 180 / Math.PI;
+  
+  // The formula above actually calculates the Descendant, so add 180°
+  asc = asc + 180;
   
   // Normalize to 0-360
   return ((asc % 360) + 360) % 360;

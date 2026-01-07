@@ -104,10 +104,33 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   }
   
   console.log('✅ Birth chart calculated! ');
-  console.log(`  ☉ Sun: ${chart.sun.degree}° ${chart.sun.sign}`);
-  console.log(`  ☽ Moon: ${chart.moon. degree}° ${chart.moon. sign}`);
-  console.log(`  ⬆ Ascendant: ${chart.ascendant.degree}° ${chart.ascendant.sign}`);
-  console.log(`  ⬆ Midheaven: ${chart.midheaven. degree}° ${chart.midheaven.sign}`);
+console.log('');
+console.log('═══════════════════════════════════════');
+console.log('          🌟 BIRTH CHART 🌟');
+console.log('═══════════════════════════════════════');
+console.log('');
+console.log('📅 Birth Data:');
+console.log(`   Date: ${chart.metadata.date}`);
+console.log(`   Time: ${chart.metadata.time} (Local)`);
+console.log(`   Timezone: UTC${chart.metadata.timezoneOffset >= 0 ? '+' : ''}${chart.metadata.timezoneOffset}`);
+console.log(`   Location: ${chart.metadata.latitude}°, ${chart.metadata. longitude}°`);
+console.log('');
+console.log('🪐 Planets: ');
+console.log(`   ☉ Sun       ${chart.sun.degree}° ${chart.sun.sign}`);
+console.log(`   ☽ Moon      ${chart.moon. degree}° ${chart.moon. sign}`);
+console.log(`   ☿ Mercury   ${chart.mercury. degree}° ${chart.mercury. sign}`);
+console.log(`   ♀ Venus     ${chart.venus. degree}° ${chart.venus. sign}`);
+console.log(`   ♂ Mars      ${chart.mars.degree}° ${chart.mars.sign}`);
+console.log(`   ♃ Jupiter   ${chart.jupiter. degree}° ${chart.jupiter. sign}`);
+console.log(`   ♄ Saturn    ${chart.saturn.degree}° ${chart.saturn.sign}`);
+console.log(`   ♅ Uranus   ${chart.uranus.degree}° ${chart.uranus.sign}`);
+console.log(`   ♆ Neptune   ${chart.neptune.degree}° ${chart.neptune.sign}`);
+console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign}`);
+console.log('');
+console.log('📐 Angles:');
+console.log(`   ⬆ Ascendant (ASC)  ${chart.ascendant.degree}° ${chart. ascendant.sign}`);
+console.log(`   ⬆ Midheaven (MC)   ${chart.midheaven.degree}° ${chart.midheaven.sign}`);
+console.log('');
   
   if (chart.houses.length === 12) {
     console.log('  🏠 All 12 house cusps calculated');
