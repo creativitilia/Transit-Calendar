@@ -76,15 +76,13 @@ body {
 }
 
 .app {
-display: grid;
-grid-template-columns: auto 1fr;
-height: 100vh;
+  display: flex;
+  height: 100vh;
 }
 
 .main {
-  display : flex;
-  flex-direction: column;
-  height : 100%; 
+  flex: 1; /* Main content takes remaining space */
+  overflow: hidden;
 }
 
 .calendar {
