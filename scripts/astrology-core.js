@@ -33,6 +33,22 @@ export const ZODIAC_SIGNS = {
   'Pisces':  330
 };
 
+// Zodiac sign symbols
+export const ZODIAC_SYMBOLS = {
+  'Aries': '♈',
+  'Taurus': '♉',
+  'Gemini':  '♊',
+  'Cancer': '♋',
+  'Leo': '♌',
+  'Virgo': '♍',
+  'Libra':  '♎',
+  'Scorpio': '♏',
+  'Sagittarius': '♐',
+  'Capricorn': '♑',
+  'Aquarius': '♒',
+  'Pisces': '♓'
+};
+
 // Planet list
 export const PLANETS = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
 

@@ -5,7 +5,7 @@
 
 import { calculateBirthChart, exportChartAsJSON } from './birth-chart.js';
 import { PLANET_SYMBOLS } from './astrology-core.js';
-import { promptForTimezoneOffset, estimateTimezoneOffset } from '.timezone-helper.js';
+import { promptForTimezoneOffset, estimateTimezoneOffset } from './timezone-helper.js';
 import { displayBirthChart } from './birth-chart-display.js';
 
 // Helper functions for birth chart storage
