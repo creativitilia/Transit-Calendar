@@ -3,7 +3,7 @@
 // Uses Astronomy Engine
 // ============================================
 
-import { PLANET_SYMBOLS } from './astrology-core. js';
+import { PLANET_SYMBOLS } from './astrology-core.js';
 import {
   initAstronomy,
   calculatePlanetPosition,
