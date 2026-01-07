@@ -39,7 +39,7 @@ export async function initAstronomy() {
 }
 
 /**
- * Calculate planet ecliptic longitude
+ * Calculate planet ecliptic longitude (GEOCENTRIC - viewed from Earth)
  * @param {string} bodyName - Planet name (Sun, Moon, Mercury, etc.)
  * @param {Date} date - JavaScript Date object
  * @returns {object} {sign, degree, absoluteDegree}
@@ -51,11 +51,26 @@ export function calculatePlanetPosition(bodyName, date) {
   }
   
   try {
-    // Get ecliptic coordinates directly - Astronomy. Ecliptic handles Date objects
-    const ecliptic = window.Astronomy.Ecliptic(bodyName, date);
+    const astroTime = window.Astronomy. MakeTime(date);
+    let longitude;
     
-    // ecliptic.elon is ecliptic longitude (0-360)
-    let longitude = ecliptic.elon;
+    // Sun is special - use SunPosition (geocentric by definition)
+    if (bodyName === 'Sun') {
+      const sunPos = window.Astronomy.SunPosition(astroTime);
+      longitude = sunPos.elon;
+    }
+    // Moon is special - use GeoMoon
+    else if (bodyName === 'Moon') {
+      const geoMoon = window.Astronomy.GeoMoon(astroTime);
+      const ecliptic = window.Astronomy.Ecliptic(geoMoon);
+      longitude = ecliptic. elon;
+    }
+    // All other planets - use GeoVector (geocentric position)
+    else {
+      const geoVector = window.Astronomy.GeoVector(bodyName, astroTime, true); // true = aberration corrected
+      const ecliptic = window.Astronomy.Ecliptic(geoVector);
+      longitude = ecliptic.elon;
+    }
     
     // Normalize to 0-360
     longitude = ((longitude % 360) + 360) % 360;
