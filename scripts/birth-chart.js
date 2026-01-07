@@ -37,7 +37,7 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   
   // Estimate timezone if not provided
   if (timezoneOffset === null) {
-    timezoneOffset = await getTimezoneOffset(latitude, longitude);
+    timezoneOffset = await getTimezoneOffset(latitude, longitude, birthDate, birthTime);
     console.warn(`⚠️ Using estimated timezone offset: ${timezoneOffset} hours`);
   }
   
