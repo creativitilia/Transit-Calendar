@@ -14,6 +14,39 @@ import {
 import { getTimezoneOffset } from './timezone-helper.js';
 
 /**
+ * Determine which house a planet is in
+ * @param {number} planetLongitude - Planet's absolute ecliptic longitude (0-360)
+ * @param {Array} houseCusps - Array of 12 house cusp absolute longitudes
+ * @returns {number} House number (1-12)
+ */
+function getPlanetHouse(planetLongitude, houseCusps) {
+  // Normalize planet longitude to 0-360
+  planetLongitude = ((planetLongitude % 360) + 360) % 360;
+  
+  // Check each house
+  for (let i = 0; i < 12; i++) {
+    const currentCusp = houseCusps[i];
+    const nextCusp = houseCusps[(i + 1) % 12]; // Wrap around to house 1 after house 12
+    
+    // Handle the case where house crosses 0° Aries (e.g., from Pisces to Aries)
+    if (currentCusp > nextCusp) {
+      // House crosses 0° boundary
+      if (planetLongitude >= currentCusp || planetLongitude < nextCusp) {
+        return i + 1; // Houses are numbered 1-12
+      }
+    } else {
+      // Normal case
+      if (planetLongitude >= currentCusp && planetLongitude < nextCusp) {
+        return i + 1;
+      }
+    }
+  }
+  
+  // Fallback (shouldn't happen, but just in case)
+  return 1;
+}
+
+/**
  * Calculate complete birth chart
  * @param {string} birthDate - YYYY-MM-DD format
  * @param {string} birthTime - HH:MM format (local time)
@@ -47,6 +80,45 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
   
   // Create UTC date by adjusting for timezone offset
   // If birth time is 13:20 in UTC+1, UTC time is 12:20
+
+  // Validate planetary calculations
+if (! chart.sun || !chart.moon) {
+  throw new Error('Failed to calculate planetary positions');
+}
+
+// Calculate houses (Placidus system)
+console.log('🏠 Calculating Placidus houses...');
+const houses = calculateHouses(birthDateTimeUTC, latitude, longitude);
+
+if (houses) {
+  chart.ascendant = houses. ascendant;
+  chart. midheaven = houses.midheaven;
+  chart.houses = houses.houses;
+  chart.houseSystem = 'Placidus';
+  
+  // **ADD THIS NEW SECTION:**
+  // Extract house cusp absolute degrees for planet-in-house calculation
+  const houseCuspDegrees = houses.houses.map(h => h.absoluteDegree);
+  
+  // Assign house numbers to each planet
+  chart.sun. house = getPlanetHouse(chart.sun.absoluteDegree, houseCuspDegrees);
+  chart.moon.house = getPlanetHouse(chart.moon.absoluteDegree, houseCuspDegrees);
+  chart.mercury.house = getPlanetHouse(chart.mercury.absoluteDegree, houseCuspDegrees);
+  chart.venus.house = getPlanetHouse(chart.venus.absoluteDegree, houseCuspDegrees);
+  chart.mars.house = getPlanetHouse(chart.mars.absoluteDegree, houseCuspDegrees);
+  chart.jupiter.house = getPlanetHouse(chart.jupiter.absoluteDegree, houseCuspDegrees);
+  chart.saturn.house = getPlanetHouse(chart.saturn.absoluteDegree, houseCuspDegrees);
+  chart.uranus.house = getPlanetHouse(chart. uranus.absoluteDegree, houseCuspDegrees);
+  chart.neptune.house = getPlanetHouse(chart. neptune.absoluteDegree, houseCuspDegrees);
+  chart.pluto.house = getPlanetHouse(chart. pluto.absoluteDegree, houseCuspDegrees);
+  
+  console.log('✅ Planet houses assigned! ');
+} else {
+  // ...  existing fallback code
+}
+
+
+
   const utcHour = hour - timezoneOffset;
   const utcTimestamp = Date.UTC(year, month - 1, day, utcHour, minute, 0);
   const birthDateTimeUTC = new Date(utcTimestamp);
