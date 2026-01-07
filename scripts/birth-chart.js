@@ -117,6 +117,18 @@ if (houses) {
   // ...  existing fallback code
 }
 
+  console.log('🪐 Planets:  ');
+console.log(`   ☉ Sun       ${chart.sun.degree}° ${chart.sun.sign. padEnd(11)} House ${chart.sun.house}`);
+console.log(`   ☽ Moon      ${chart.moon.degree}° ${chart.moon.sign.padEnd(11)} House ${chart.moon.house}`);
+console.log(`   ☿ Mercury   ${chart. mercury.degree}° ${chart. mercury.sign.padEnd(11)} House ${chart.mercury.house}`);
+console.log(`   ♀ Venus     ${chart.venus.degree}° ${chart.venus.sign.padEnd(11)} House ${chart.venus.house}`);
+console.log(`   ♂ Mars      ${chart.mars.degree}° ${chart.mars.sign. padEnd(11)} House ${chart.mars.house}`);
+console.log(`   ♃ Jupiter   ${chart.jupiter.degree}° ${chart.jupiter.sign.padEnd(11)} House ${chart.jupiter.house}`);
+console.log(`   ♄ Saturn    ${chart.saturn. degree}° ${chart.saturn. sign.padEnd(11)} House ${chart.saturn.house}`);
+console.log(`   ♅ Uranus    ${chart.uranus.degree}° ${chart.uranus.sign.padEnd(11)} House ${chart.uranus.house}`);
+console.log(`   ♆ Neptune   ${chart.neptune. degree}° ${chart.neptune.sign.padEnd(11)} House ${chart.neptune.house}`);
+console.log(`   ♇ Pluto     ${chart.pluto.degree}° ${chart.pluto.sign.padEnd(11)} House ${chart.pluto.house}`);
+
 
 
   const utcHour = hour - timezoneOffset;
