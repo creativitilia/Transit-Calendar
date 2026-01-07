@@ -1,14 +1,98 @@
-
-[data-dialog="user-registration"] {
-  max-width: 500px;
+/* User Registration Dialog Styling */
+#user-registration-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 600px;
+  width: 90%;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: white;
 }
 
-[data-dialog="user-registration"] .dialog__title {
+#user-registration-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.user-registration-form {
+  padding: 2rem;
+}
+
+.user-registration-form h3 {
   text-align: center;
   color: #2563eb;
-  font-size:  1.5rem;
+  font-size: 1.75rem;
+  margin-bottom:  1.5rem;
+  font-weight: 600;
 }
 
-[data-dialog="user-registration"] .form__field {
-  margin-bottom: 1rem;
+.user-registration-form label {
+  display: block;
+  margin-bottom: 1. 5rem;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.user-registration-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius:  4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.user-registration-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.user-registration-form menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin:  0;
+  padding: 1. 5rem 0 0 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-registration-form button {
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.user-registration-form button:hover {
+  transform: translateY(-1px);
+}
+
+.user-registration-form button:active {
+  transform: translateY(0);
+}
+
+.user-registration-form button[value="cancel"] {
+  background-color:  #f3f4f6;
+  color: #374151;
+}
+
+.user-registration-form button[value="cancel"]:hover {
+  background-color: #e5e7eb;
+}
+
+.user-registration-form button[type="submit"] {
+  background-color: #2563eb;
+  color: white;
+}
+
+.user-registration-form button[type="submit"]:hover {
+  background-color: #1d4ed8;
 }
