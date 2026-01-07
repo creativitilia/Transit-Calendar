@@ -51,19 +51,8 @@ export function calculatePlanetPosition(bodyName, date) {
   }
   
   try {
-    console.log(`🔍 Calculating ${bodyName}`);
-    console.log(`   Input date: `, date);
-    console.log(`   Is Date?: `, date instanceof Date);
-    console.log(`   ISO:`, date.toISOString());
-    
-    // MakeTime expects a JavaScript Date object directly
-    const astroTime = window.Astronomy.MakeTime(date);
-    
-    console.log(`   AstroTime created: `, astroTime);
-    console.log(`   Has tt?:`, astroTime?.tt);
-    
-    // Get ecliptic coordinates
-    const ecliptic = window.Astronomy. Ecliptic(bodyName, astroTime);
+    // Get ecliptic coordinates directly - Astronomy. Ecliptic handles Date objects
+    const ecliptic = window.Astronomy.Ecliptic(bodyName, date);
     
     // ecliptic.elon is ecliptic longitude (0-360)
     let longitude = ecliptic.elon;
@@ -74,8 +63,6 @@ export function calculatePlanetPosition(bodyName, date) {
     // Convert to zodiac position
     const zodiacPos = toZodiacPosition(longitude);
     
-    console.log(`   ✅ ${bodyName}:  ${zodiacPos.degree}° ${zodiacPos.sign}`);
-    
     return {
       ... zodiacPos,
       absoluteDegree: longitude
@@ -83,7 +70,6 @@ export function calculatePlanetPosition(bodyName, date) {
     
   } catch (error) {
     console.error(`Error calculating ${bodyName}:`, error);
-    console.error(`Date was: `, date);
     return null;
   }
 }
