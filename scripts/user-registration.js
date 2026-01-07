@@ -42,14 +42,20 @@ function handleRegistrationSubmit(event) {
   displayWelcomeMessage();
 }
 
-// Show a registration dialog (created dynamically) if the page doesn't include one.
+// Show a registration dialog
 function showRegistrationDialog() {
-  if (document.getElementById('user-registration-dialog')) return;
+  const dialog = document.getElementById('user-registration-dialog');
+  
+  // If dialog exists in HTML, just show it
+  if (dialog) {
+    try { dialog.showModal(); } catch (e) { dialog.setAttribute('open',''); }
+    return;
+  }
 
-  // Create dialog element
-  const dialog = document.createElement('dialog');
-  dialog.id = 'user-registration-dialog';
-  dialog.innerHTML = `
+  // Otherwise, create dialog element dynamically (fallback)
+  const newDialog = document.createElement('dialog');
+  newDialog.id = 'user-registration-dialog';
+  newDialog.innerHTML = `
     <form id="user-registration-form" method="dialog" class="user-registration-form">
       <h3>Register</h3>
       <label>Name<br><input id="user-name" required /></label><br>
@@ -65,17 +71,17 @@ function showRegistrationDialog() {
     </form>
   `;
 
-  document.body.appendChild(dialog);
+  document.body.appendChild(newDialog);
 
   // Attach submit handler now that the form exists
   const registrationForm = document.getElementById('user-registration-form');
   if (registrationForm) registrationForm.addEventListener('submit', handleRegistrationSubmit);
 
   // Cancel button closes dialog without saving
-  document.getElementById('user-reg-cancel')?.addEventListener('click', () => dialog.close());
+  document.getElementById('user-reg-cancel')?.addEventListener('click', () => newDialog.close());
 
   // Show modal
-  try { dialog.showModal(); } catch (e) { dialog.setAttribute('open',''); }
+  try { newDialog.showModal(); } catch (e) { newDialog.setAttribute('open',''); }
 }
 
 function displayWelcomeMessage() {
