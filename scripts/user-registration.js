@@ -3,9 +3,24 @@
 // Uses birth-chart.js module
 // ============================================
 
-import { calculateBirthChart, saveBirthChart, loadBirthChart, formatBirthChart } from './birth-chart.js';
+import { calculateBirthChart, exportChartAsJSON } from './birth-chart.js';
 import { PLANET_SYMBOLS } from './astrology-core.js';
 import { promptForTimezoneOffset, estimateTimezoneOffset } from './timezone-helper.js';
+
+// Helper functions for birth chart storage
+function saveBirthChart(chart) {
+  localStorage.setItem('birthChart', JSON.stringify(chart));
+  console.log('💾 Birth chart saved to localStorage');
+}
+
+function loadBirthChart() {
+  const chartData = localStorage.getItem('birthChart');
+  if (chartData) {
+    return JSON.parse(chartData);
+  }
+  return null;
+}
+
 
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -129,6 +129,12 @@ export async function calculateBirthChart(birthDate, birthTime, latitude, longit
     
     // Extract house cusp absolute degrees for planet-in-house calculation
     const houseCuspDegrees = houses.houses.map(h => h.absoluteDegree);
+    // DEBUG: Print all house cusps
+console.log('🏠 House Cusps (absolute degrees):');
+for (let i = 0; i < houseCuspDegrees. length; i++) {
+  console.log(`   House ${i + 1}: ${houseCuspDegrees[i]. toFixed(2)}°`);
+}
+console.log('');
     
     // Assign house numbers to each planet
     chart.sun. house = getPlanetHouse(chart.sun.absoluteDegree, houseCuspDegrees);
