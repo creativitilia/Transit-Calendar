@@ -48,7 +48,7 @@ function showRegistrationDialog() {
   
   // If dialog exists in HTML, just show it
   if (dialog) {
-    try { dialog.showModal(); } catch (e) { dialog.setAttribute('open',''); }
+    try { dialog.showModal(); } catch (e) { dialog.show(); }
     return;
   }
 
@@ -81,7 +81,7 @@ function showRegistrationDialog() {
   document.getElementById('user-reg-cancel')?.addEventListener('click', () => newDialog.close());
 
   // Show modal
-  try { newDialog.showModal(); } catch (e) { newDialog.setAttribute('open',''); }
+  try { newDialog.showModal(); } catch (e) { newDialog.show(); }
 }
 
 function displayWelcomeMessage() {
