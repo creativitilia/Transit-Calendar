@@ -278,3 +278,5 @@ function clearUserData() {
 window.clearUserData = clearUserData;
 
 console.log('📝 User Registration module loaded! ');
+
+

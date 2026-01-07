@@ -495,3 +495,29 @@
 .button-primary:hover {
   background-color: #1d4ed8;
 }
+
+/* Houses collapsible section */
+.houses-details {
+  margin:  1rem 0;
+  padding:  1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.houses-details summary {
+  cursor: pointer;
+  user-select: none;
+  color: #2563eb;
+}
+
+.houses-details summary:hover {
+  text-decoration: underline;
+}
+
+.houses-grid {
+  display: grid;
+  grid-template-columns:  repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}

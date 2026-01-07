@@ -4,12 +4,14 @@
 // ============================================
 
 import { PLANET_SYMBOLS } from './astrology-core.js';
+
 import {
   initAstronomy,
   calculatePlanetPosition,
   calculateHouses
 } from './ephemeris.js';
-import { estimateTimezoneOffset } from './timezone-helper.js';
+
+import { getTimezoneOffset } from './timezone-helper.js';
 
 /**
  * Calculate complete birth chart
