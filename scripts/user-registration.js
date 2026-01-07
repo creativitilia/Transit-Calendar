@@ -3,8 +3,10 @@
 // Uses birth-chart.js module
 // ============================================
 
-import { calculateBirthChart, saveBirthChart, loadBirthChart } from './birth-chart.js';
+import { calculateBirthChart, saveBirthChart, loadBirthChart, formatBirthChart } from './birth-chart.js';
 import { PLANET_SYMBOLS } from './astrology-core.js';
+import { promptForTimezoneOffset, estimateTimezoneOffset } from './timezone-helper.js';
+
 
 document.addEventListener('DOMContentLoaded', function() {
   checkIfUserRegistered(); 
