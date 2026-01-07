@@ -14,7 +14,7 @@ export async function initAstronomy() {
   if (astronomyReady) return true;
   
   return new Promise((resolve) => {
-    if (window. Astronomy && window.Astronomy.MakeTime) {
+    if (window.Astronomy && window.Astronomy.AstroTime) {
       astronomyReady = true;
       console.log('✨ Astronomy Engine loaded! ');
       resolve(true);
@@ -23,7 +23,7 @@ export async function initAstronomy() {
       let attempts = 0;
       const checkInterval = setInterval(() => {
         attempts++;
-        if (window.Astronomy && window.Astronomy.MakeTime) {
+        if (window.Astronomy && window.Astronomy.AstroTime) {
           clearInterval(checkInterval);
           astronomyReady = true;
           console.log('✨ Astronomy Engine loaded!');
@@ -51,11 +51,21 @@ export function calculatePlanetPosition(bodyName, date) {
   }
   
   try {
-    // Convert JS Date to Astronomy Engine format
-    const astroTime = window.Astronomy.MakeTime(date);
+    // Create AstroTime from Date components
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1; // JS months are 0-indexed
+    const day = date.getDate();
+    const hour = date.getHours();
+    const minute = date.getMinutes();
+    const second = date.getSeconds();
+    
+    // Create AstroTime object properly
+    const astroTime = new window. Astronomy.AstroTime(
+      new Date(Date.UTC(year, month - 1, day, hour, minute, second))
+    );
     
     // Get ecliptic coordinates
-    const ecliptic = window.Astronomy. Ecliptic(bodyName, astroTime);
+    const ecliptic = window.Astronomy.Ecliptic(bodyName, astroTime);
     
     // ecliptic. elon is ecliptic longitude (0-360)
     let longitude = ecliptic.elon;
@@ -85,15 +95,12 @@ export function calculatePlanetPosition(bodyName, date) {
  * @returns {object} {ascendant, midheaven}
  */
 export function calculateHouses(date, latitude, longitude) {
-  if (!window. Astronomy) {
+  if (!window.Astronomy) {
     console.error('Astronomy Engine not loaded');
     return null;
   }
   
   try {
-    // Convert to Astronomy Engine time
-    const astroTime = window.Astronomy.MakeTime(date);
-    
     // Calculate Local Sidereal Time
     const lst = calculateLocalSiderealTime(date, longitude);
     
@@ -107,12 +114,12 @@ export function calculateHouses(date, latitude, longitude) {
     
     return {
       ascendant:  {
-        ... ascendant,
+        ...ascendant,
         absoluteDegree: ascLongitude
       },
       midheaven: {
-        ...midheaven,
-        absoluteDegree:  mcLongitude
+        ... midheaven,
+        absoluteDegree: mcLongitude
       }
     };
     
