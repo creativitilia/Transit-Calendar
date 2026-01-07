@@ -1,0 +1,166 @@
+/* ============================================
+   BIRTH CHART DISPLAY
+   ============================================ */
+
+.birth-chart-display {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+  padding-top: 1rem;
+}
+
+.birth-chart-display__header {
+  margin-bottom: 0.75rem;
+  padding:  0 0.5rem;
+}
+
+.birth-chart-display__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-primary, #111827);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.birth-chart-display__content {
+  max-height: 400px;
+  overflow-y:  auto;
+  overflow-x: hidden;
+}
+
+.birth-chart-display__empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+/* Birth Chart List */
+.birth-chart-list {
+  list-style: none;
+  margin: 0;
+  padding:  0;
+}
+
+.birth-chart-list__item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto 32px;
+  gap: 0.5rem;
+  align-items:  center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+  font-size: 0.875rem;
+}
+
+.birth-chart-list__item:hover {
+  background-color: var(--color-hover, #f3f4f6);
+}
+
+/* Planet Symbol */
+.birth-chart-list__symbol {
+  font-size: 1.25rem;
+  text-align: center;
+  color: var(--color-primary, #2563eb);
+  line-height: 1;
+}
+
+/* Planet Name */
+.birth-chart-list__name {
+  font-weight: 500;
+  color: var(--color-text-primary, #111827);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Position (degree + sign) */
+.birth-chart-list__position {
+  color: var(--color-text-secondary, #6b7280);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* House Number */
+.birth-chart-list__house {
+  color: var(--color-text-tertiary, #9ca3af);
+  font-size: 0.75rem;
+  font-weight: 500;
+  min-width: 32px;
+  text-align: right;
+  background-color: var(--color-background-secondary, #f9fafb);
+  padding: 0.125rem 0.375rem;
+  border-radius:  4px;
+}
+
+/* Zodiac Sign Symbol */
+.birth-chart-list__zodiac {
+  font-size: 1.125rem;
+  color: var(--color-text-secondary, #6b7280);
+  text-align: center;
+  line-height: 1;
+}
+
+/* Scrollbar Styling */
+.birth-chart-display__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.birth-chart-display__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.birth-chart-display__content::-webkit-scrollbar-thumb {
+  background: var(--color-border, #e5e7eb);
+  border-radius: 3px;
+}
+
+.birth-chart-display__content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary, #9ca3af);
+}
+
+/* Dark Mode Support (if you have it) */
+@media (prefers-color-scheme: dark) {
+  .birth-chart-display {
+    border-top-color: #374151;
+  }
+  
+  .birth-chart-display__title {
+    color: #f9fafb;
+  }
+  
+  .birth-chart-display__empty {
+    color: #9ca3af;
+  }
+  
+  .birth-chart-list__item:hover {
+    background-color: #1f2937;
+  }
+  
+  .birth-chart-list__name {
+    color: #f9fafb;
+  }
+  
+  .birth-chart-list__position {
+    color:  #d1d5db;
+  }
+  
+  .birth-chart-list__house {
+    color: #9ca3af;
+    background-color: #1f2937;
+  }
+  
+  .birth-chart-list__zodiac {
+    color: #9ca3af;
+  }
+  
+  .birth-chart-display__content::-webkit-scrollbar-thumb {
+    background: #4b5563;
+  }
+  
+  .birth-chart-display__content::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+}
