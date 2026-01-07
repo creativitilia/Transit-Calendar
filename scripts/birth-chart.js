@@ -277,6 +277,7 @@ function determineAspectType(angle) {
 // Export chart as JSON
 export function exportChartAsJSON(chart) {
   return JSON.stringify(chart, null, 2);
+<<<<<<< HEAD
 }
 
 // Get house interpretation
@@ -284,3 +285,11 @@ export function getHouseInterpretation(houseNumber) {
   return HOUSE_KEYWORDS[houseNumber] || 'Unknown house';
 }
 
+=======
+}
+
+// Get house interpretation
+export function getHouseInterpretation(houseNumber) {
+  return HOUSE_KEYWORDS[houseNumber] || 'Unknown house';
+}
+>>>>>>> d1b3db1f3cb15b0acedbcf824ba6676e4baae10f
