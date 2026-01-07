@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="/styles/index.css">
+  <link rel="stylesheet" href="/styles/user-registration.css">
   <script src="/scripts/index.js" type="module"></script>
+  <script src="/scripts/user-registration.js"></script>
   <title>Transit Calendar</title>
 </head>
 <body>
@@ -557,6 +559,55 @@
       <button class="mini-calendar__day button button--sm" data-mini-calendar-day></button>
     </li>
   </template>
+
+  <!-- User Registration Dialog -->
+  <dialog class="dialog" id="user-registration-dialog" data-dialog="user-registration">
+    <form class="form" id="user-registration-form">
+      <div class="dialog__wrapper">
+        <div class="dialog__header">
+          <h2 class="dialog__title">User Registration</h2>
+        </div>
+        <div class="dialog__content">
+          <div class="form__fields">
+            <div class="form__field">
+              <label class="form__label" for="user-name">Name</label>
+              <input class="input input--fill" type="text" id="user-name" name="user-name" placeholder="Your Name" required autofocus/>
+            </div>
+
+            <div class="form__field">
+              <label class="form__label" for="user-birthday">Birthday</label>
+              <input class="input input--fill" type="date" id="user-birthday" name="user-birthday" required />
+            </div>
+
+            <div class="form__field">
+              <label class="form__label" for="user-birth-time">Time of Birth</label>
+              <input class="input input--fill" type="time" id="user-birth-time" name="user-birth-time" required />
+            </div>
+
+            <div class="form__field">
+              <label class="form__label" for="user-birth-place">Place of Birth</label>
+              <input class="input input--fill" type="text" id="user-birth-place" name="user-birth-place" placeholder="City, Country" required />
+            </div>
+
+            <div class="form__field">
+              <label class="form__label" for="user-email">Email</label>
+              <input class="input input--fill" type="email" id="user-email" name="user-email" placeholder="your.email@example.com" />
+            </div>
+
+            <div class="form__field">
+              <label class="form__label" for="user-password">Password</label>
+              <input class="input input--fill" type="password" id="user-password" name="user-password" />
+            </div>
+          </div>
+        </div>
+        <div class="dialog__footer">
+          <div class="dialog__actions">
+            <button class="button button--primary" type="submit">Register</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </dialog>
 
 
 
