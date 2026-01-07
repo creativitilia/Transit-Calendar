@@ -96,3 +96,317 @@
 .user-registration-form button[type="submit"]:hover {
   background-color: #1d4ed8;
 }
+
+/* User Registration Dialog Styling */
+#user-registration-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 600px;
+  width: 90%;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  background: white;
+}
+
+#user-registration-dialog::backdrop {
+  background:  rgba(0, 0, 0, 0.5);
+}
+
+.user-registration-form {
+  padding: 2rem;
+}
+
+.user-registration-form h3 {
+  text-align: center;
+  color: #2563eb;
+  font-size: 1.75rem;
+  margin-bottom:   1.5rem;
+  font-weight: 600;
+}
+
+.user-registration-form label {
+  display: block;
+  margin-bottom: 1. 5rem;
+  font-size: 0.95rem;
+  color: #333;
+  position: relative; /* ← ADDED FOR DROPDOWN */
+}
+
+.user-registration-form input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius:  4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.user-registration-form input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.user-registration-form menu {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin:   0;
+  padding: 1.5rem 0 0 0;
+  border-top: 1px solid #e5e7eb;
+}
+
+.user-registration-form button {
+  padding: 0.65rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.user-registration-form button:hover {
+  transform: translateY(-1px);
+}
+
+.user-registration-form button:active {
+  transform: translateY(0);
+}
+
+.user-registration-form button[value="cancel"] {
+  background-color:  #f3f4f6;
+  color: #374151;
+}
+
+.user-registration-form button[value="cancel"]:hover {
+  background-color: #e5e7eb;
+}
+
+.user-registration-form button[type="submit"] {
+  background-color: #2563eb;
+  color: white;
+}
+
+.user-registration-form button[type="submit"]:hover {
+  background-color: #1d4ed8;
+}
+
+/* ============================================ */
+/* LOCATION SEARCH DROPDOWN - NEW STYLES */
+/* ============================================ */
+
+.location-suggestions {
+  position: absolute;
+  top:  100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  display: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 0.5rem;
+}
+
+.location-suggestions.active {
+  display: block;
+}
+
+.location-suggestion {
+  padding: 0.75rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  transition: background-color 0.2s;
+}
+
+.location-suggestion:hover {
+  background-color: #f3f4f6;
+}
+
+.location-suggestion:last-child {
+  border-bottom: none;
+}
+
+.location-suggestion strong {
+  display: block;
+  color: #2563eb;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.location-suggestion small {
+  display: block;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* ============================================ */
+/* BIRTH CHART CONFIRMATION DIALOG */
+/* ============================================ */
+
+#birth-chart-confirmation {
+  position: fixed;
+  top:  50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 500px;
+  width: 90%;
+  padding: 0;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  background: white;
+}
+
+#birth-chart-confirmation::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.birth-chart-confirmation {
+  padding: 2rem;
+}
+
+.birth-chart-confirmation h3 {
+  text-align: center;
+  color: #2563eb;
+  font-size: 1.75rem;
+  margin-bottom:  0.5rem;
+  font-weight: 600;
+}
+
+.birth-chart-confirmation > p {
+  text-align:  center;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+/* Three-row layout for Sun, Moon, Ascendant */
+.birth-chart-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.chart-row {
+  display:  grid;
+  grid-template-columns: 50px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding:  1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.chart-row:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-icon {
+  font-size:  2rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.chart-label {
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: left;
+}
+
+.chart-value {
+  color: #2563eb;
+  font-size: 1.25rem;
+  font-weight:  700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.confirmation-note {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: #fef3c7;
+  border-radius: 6px;
+  border: 1px solid #fbbf24;
+}
+
+.confirmation-note small {
+  color: #92400e;
+  font-size:  0.875rem;
+}
+
+.birth-chart-confirmation menu {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin:  0;
+  padding: 0;
+}
+
+.button-secondary,
+.button-primary {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight:  500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.button-secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.button-secondary:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.button-primary {
+  background:  linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+}
+
+.button-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.3);
+}
+
+.button-primary:active,
+.button-secondary:active {
+  transform: translateY(0);
+}
