@@ -13,6 +13,7 @@ import {initMobileSidebar} from "./mobile-sidebar.js";
 import {initHamburger} from "./hamburger.js";
 import {initUrl} from "./url.js";
 import { initSync } from "./sync.js";
+import { initSidebarChartToggle } from './sidebar-chart-toggle.js';
 
 
 initViewSelect();
@@ -30,3 +31,4 @@ initMobileSidebar();
 initHamburger();
 initUrl();
 initSync();
+initSidebarChartToggle();
