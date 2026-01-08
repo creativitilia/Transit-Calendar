@@ -1,14 +1,27 @@
-/* Fix vertical alignment of filters and Clear button in drawer */
+/* --- Drawer: combined alignment fixes + prettier Clear button (scoped to .day-dropdown__all-drawer) --- */
 
-/* Align filter row children at their bottom edge so selects and button line up */
-.day-dropdown__all-drawer .day-dropdown__filter-bar--drawer {
-  display: flex;
-  align-items: flex-end; /* key change: align controls with selects */
-  gap: 12px;
-  padding: 10px 12px;
+/* Ensure the drawer container accepts pointer events and appears above content */
+.day-dropdown__all-drawer {
+  pointer-events: auto;
+  z-index: 1500;
 }
 
-/* Ensure each filter wrapper remains a column (label above control) */
+/* Filter row: horizontal layout, align to baseline (bottom) so labels sit above controls
+   and controls (selects + Clear) share the same baseline. */
+.day-dropdown__all-drawer .day-dropdown__filter-bar--drawer {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1520;
+  padding: 10px 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end; /* align controls to same baseline */
+  border-bottom: 1px solid #eef2f7;
+  box-sizing: border-box;
+}
+
+/* Each filter wrapper remains a column: label above control */
 .day-dropdown__all-drawer .day-dropdown__filter-wrapper {
   display: flex;
   flex-direction: column;
@@ -16,31 +29,108 @@
   min-width: 120px;
 }
 
-/* Normalize heights so selects and Clear share the same visual baseline */
-.day-dropdown__all-drawer .day-dropdown__filter,
-.day-dropdown__all-drawer .day-dropdown__clear-filters {
-  height: 36px;
+/* Compact label style (drawer-only) */
+.day-dropdown__all-drawer .day-dropdown__filter-label {
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* Make selects visually consistent and same height as button.
+   Scoped to the drawer so native selects elsewhere are unaffected. */
+.day-dropdown__all-drawer .day-dropdown__filter {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 8px 36px 8px 12px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid #e6eef6;
+  background: linear-gradient(180deg,#fff,#fbfdff);
   min-height: 36px;
+  height: 36px;                /* enforce same height */
   line-height: 36px;
+  box-shadow: 0 1px 0 rgba(2,6,23,0.03), inset 0 1px 0 rgba(255,255,255,0.6);
+  cursor: pointer;
+  color: #0f172a;
+  background-image: url("data:image/svg+xml,%3Csvg width='14' height='8' viewBox='0 0 14 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%23939AA3' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
   box-sizing: border-box;
 }
 
-/* Make Clear align explicitly to the bottom of the filter row */
+/* Focus state for select (drawer-only) */
+.day-dropdown__all-drawer .day-dropdown__filter:focus {
+  outline: none;
+  border-color: rgba(59,130,246,0.9);
+  box-shadow: 0 8px 20px rgba(59,130,246,0.08);
+}
+
+/* Controls container (holds Clear). Keep it inline with selects, do NOT push to the far right. */
 .day-dropdown__all-drawer .day-dropdown__controls-small {
-  margin-left: 8px;
   display: inline-flex;
   align-items: center;
-  align-self: flex-end; /* ensures the whole controls container sits on the same baseline */
+  margin-left: 8px;       /* small gap from selects */
+  align-self: flex-end;   /* stick to baseline aligned with selects */
 }
 
-/* Tweak button padding so text sits centered vertically */
+/* Remove any pseudo-icon previously added to the Clear button */
+.day-dropdown__all-drawer .day-dropdown__clear-filters::before {
+  display: none !important;
+  content: none !important;
+}
+
+/* Pretty Clear button — filled, pill-shaped, same height as selects, aligned on baseline */
 .day-dropdown__all-drawer .day-dropdown__clear-filters {
-  padding: 0 12px; /* vertical centering handled by height/line-height */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;               /* same as selects */
+  min-height: 36px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #eef2ff;        /* light indigo fill */
+  color: #3730a3;             /* indigo text */
+  font-weight: 600;
+  font-size: 13px;
+  border: 1px solid rgba(79,70,229,0.14);
+  box-shadow: 0 6px 18px rgba(79,70,229,0.06);
+  cursor: pointer;
+  transition: background-color 140ms ease, transform 80ms ease, box-shadow 140ms ease;
+  pointer-events: auto;
+  box-sizing: border-box;
 }
 
-/* Small screens: keep same baseline alignment */
+/* Hover: stronger fill and lift */
+.day-dropdown__all-drawer .day-dropdown__clear-filters:hover {
+  background: #e0e7ff;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 26px rgba(79,70,229,0.10);
+}
+
+/* Focus: accessible outline */
+.day-dropdown__all-drawer .day-dropdown__clear-filters:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(79,70,229,0.12);
+  border-color: rgba(79,70,229,0.32);
+}
+
+/* Disabled state (if applicable) */
+.day-dropdown__all-drawer .day-dropdown__clear-filters[disabled],
+.day-dropdown__all-drawer .day-dropdown__clear-filters.disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: rgba(2,6,23,0.04);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Small screens: slightly smaller sizes, keep baseline alignment */
 @media (max-width: 420px) {
   .day-dropdown__all-drawer .day-dropdown__filter-wrapper { min-width: 96px; }
   .day-dropdown__all-drawer .day-dropdown__filter,
   .day-dropdown__all-drawer .day-dropdown__clear-filters { height: 34px; line-height: 34px; }
+  .day-dropdown__all-drawer .day-dropdown__clear-filters { padding: 0 10px; font-size: 12px; border-radius: 8px; }
 }
