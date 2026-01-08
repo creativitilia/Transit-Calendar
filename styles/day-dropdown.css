@@ -47,25 +47,26 @@
   background: rgba(0,0,0,0.03);
 }
 
-/* Dropdown panel */
-.day-dropdown__panel {
-  display: none;
-  position: absolute;
-  top: 56px; /* below the pill */
-  left: 8px;
-  width: min(320px, calc(100% - 16px));
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(2,6,23,0.12);
-  max-height: 320px;
-  overflow: auto;
-  padding: 6px;
-  z-index: 50;
+/* day-dropdown.css - panel in-flow and fixed max-height (scrollable) */
+
+/* remove absolute placement and instead let panel be part of normal flow */
+.day-dropdown__panel{
+  display:none;
+  position: static;                 /* in-flow: causes row height to grow */
+  margin-top: 10px;                 /* gap between pill and panel */
+  width: calc(100% - 16px);         /* fit within the cell while leaving padding */
+  background:#fff;
+  border-radius:8px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  max-height: 240px;                /* fixed panel size */
+  overflow:auto;                    /* scrollable content */
+  padding:6px;
+  z-index: auto;
 }
 
-/* When open */
+/* show panel when open */
 .day-dropdown__panel--open {
-  display: block;
+  display:block;
 }
 
 /* Panel header */
