@@ -22,20 +22,17 @@ export function initMonthCalendar(parent, selectedDate, eventStore) {
   const calendarWeekClass = calendarWeekClasses[calendarWeeks];
   calendarElement.classList.add(calendarWeekClass);
 
-
-
-
   for (const calendarDay of calendarDays) {
     const events = eventStore.getEventsByDate(calendarDay);
     sortCalendarDayEvents(events);
-    initCalendarDay(calendarDayListElement, calendarDay, events);
+    // Pass eventStore down so day-dropdown can lazy-load events on open
+    initCalendarDay(calendarDayListElement, calendarDay, events, eventStore);
   }
-
 
   parent.appendChild(calendarElement);
 }
 
-function initCalendarDay(parent, calendarDay, events) {
+function initCalendarDay(parent, calendarDay, events, eventStore) {
   const calendarDayContent = calendarDayTemplateElement.content.cloneNode(true);
   const calendarDayElement = calendarDayContent.querySelector('[data-month-calendar-day]');
   const calendarDayLabelElement = calendarDayContent.querySelector('[data-month-calendar-day-label]');
@@ -48,6 +45,7 @@ function initCalendarDay(parent, calendarDay, events) {
   }
 
   calendarDayLabelElement.textContent = calendarDay.getDate();
+  // Use eventStore so the dropdown can call eventStore.getEventsByDate(date) lazily
   attachDayDropdown(calendarDayElement, calendarDay, eventStore);
 
   calendarDayLabelElement.addEventListener('click', () => {
