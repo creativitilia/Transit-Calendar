@@ -138,11 +138,27 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     }
   }
 
-  // Toggle handler
+    // Toggle handler (stop propagation so the wrapper's click doesn't open the create dialog)
   toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation(); // IMPORTANT: prevent bubble to wrapper which opens create dialog
     const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
     if (isOpen) closePanel();
     else openPanel();
+  });
+
+  // Prevent mousedown from bubbling (avoid wrapper click starting create flow on some browsers)
+  toggleBtn.addEventListener('mousedown', (e) => {
+    e.stopPropagation();
+  });
+
+  // Ensure clicks inside the panel do not bubble to wrapper
+  panel.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // Also stop propagation for pointerdown/touchstart to be safe on mobile
+  panel.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
   });
 
   // Close when clicking outside
