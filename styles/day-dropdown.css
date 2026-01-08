@@ -1,72 +1,123 @@
-.month-calendar {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
+/* Day dropdown UI + small month-grid tweaks to host the pill dropdown */
 
-.month-calendar__day-of-week-list {
-  list-style-type: none;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-bottom: 1px solid var(--color-gray-300);
-  padding: 0.75rem 0;
-}
-
-.month-calendar__day-of-week {
-  font-size: var(--font-size-md);
-  line-height: var(--line-height-md);
-  text-align: center;
-  font-weight: 500;
-}
-
-/* allow grid to grow/shrink; rows auto-size so a row expands only when content grows */
-.month-calendar__day-list-wrapper{
-  position: relative;
-}
-
-.month-calendar__day-list {
-  list-style-type: none;
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  grid-column-gap: 12px;
-  grid-row-gap: 12px;
-  padding: 12px 8px;
-}
-
-/* Four/Five/Six week rows */
-.month-calendar--four-week .month-calendar__day-list { grid-template-rows: repeat(4, auto); }
-.month-calendar--five-week .month-calendar__day-list { grid-template-rows: repeat(5, auto); }
-.month-calendar--six-week .month-calendar__day-list { grid-template-rows: repeat(6, auto); }
-
+/* Host cell tweaks */
 .month-calendar__day {
-  border: 0;
+  border: 0; /* remove grid borders */
+  position: relative; /* required so the panel can be in-flow inside the cell */
   display: flex;
   flex-direction: column;
-  padding: 8px 8px;
-  position: relative;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 48px;
+  padding: 8px 6px; /* keep internal spacing */
+  background: transparent;
 }
 
-.month-calendar__day--highlight { background-color: var(--color-blue-50); }
-
+/* Hide the original small date badge in the corner */
 .month-calendar__day-label {
-  width: 100%;
-  padding: 0.5rem 0;
-  background-color: transparent;
-  border: 0;
-  cursor: pointer;
-  color: var(--color-text-dark);
+  display: none !important;
 }
 
 /* Event wrapper becomes the area where the pill is centered */
 .month-calendar__event-list-wrapper {
-  flex-grow: 1;
-  padding-bottom: 1.5rem;
-  width: 100%;
   display: flex;
   align-items: flex-start;
   justify-content: center;
+  padding-top: 8px; /* small top space */
+  padding-bottom: 8px;
+}
+
+/* Container that holds pill and panel */
+.day-dropdown__container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* Pill toggle — elongated, transparent background, thin border */
+.day-dropdown__button {
+  display: inline-block;
+  padding: 8px 22px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-dark);
+  border: 1px solid rgba(0,0,0,0.12);
+  cursor: pointer;
+  font-size: 14px;
+  margin: 8px 0;
+  width: calc(100% - 32px);   /* keep pill aligned with cell */
+  max-width: 220px;
+  text-align: center;
+  transition: border-radius 120ms ease, box-shadow 120ms ease;
+  box-shadow: none;
+}
+
+.day-dropdown__button:hover {
+  background: rgba(0,0,0,0.03);
+}
+
+/* When container is opened, button becomes the top of the expanded block:
+   remove bottom border-radius so the panel looks attached */
+.day-dropdown__container--open .day-dropdown__button {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* Panel in-flow, same width as the pill (fit the container) */
+.day-dropdown__panel {
+  display: none;
+  width: calc(100% - 32px);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: 0; /* no double border between pill and panel */
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px;
+  box-sizing: border-box;
+  margin: 0 0 8px 0;
+}
+
+/* show panel when open */
+.day-dropdown__panel--open {
+  display: block;
+}
+
+/* header */
+.day-dropdown__panel-header {
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: #111827;
+}
+
+/* list */
+.day-dropdown__event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ensure each rendered event fills width */
+.day-dropdown__event-list-item > .event {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* loading / empty */
+.day-dropdown__loading,
+.day-dropdown__empty,
+.day-dropdown__error {
+  padding: 8px;
+  color: #374151;
+  font-size: 13px;
+}
+
+/* Make the entire calendar background look cleaner */
+.month-calendar__day-list {
+  background: transparent;
 }
