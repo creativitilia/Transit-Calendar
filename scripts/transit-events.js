@@ -1,33 +1,179 @@
-// Generate transit-aspect "events" for the calendar.
-// - Reads natal chart from localStorage ('birthChart')
-// - Computes transit planet positions for a given date (local midday)
-// - Compares transit positions to natal planet absolute degrees using simple aspect orbs
-// - Returns an array of event objects compatible with event-store/event rendering
+// Transit events generator with scoring for prioritization
+// Exports getTransitEventsForDate(date) -> returns ALL transit events for that day (scored, descending)
+// Uses Astronomy Engine wrapper calculatePlanetPosition from ephemeris.js
 
-import { PLANETS as PLANET_KEYS, PLANET_SYMBOLS } from './astrology-core.js';
+import { PLANET_SYMBOLS } from './astrology-core.js';
 import { calculatePlanetPosition } from './ephemeris.js';
 import { calculateAngle } from './astrology-core.js';
 
-// Aspect definition (same convention used in birth-chart.js)
-const ORBS = {
-  conjunction: 8,
-  opposition: 8,
-  trine: 8,
-  square: 7,
-  sextile: 6,
-  inconjunct: 3
-};
+// Planet keys (lowercase) used consistently
+const PLANETS = ['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
 
+// Aspect definitions and weights
 const ASPECTS = [
-  { name: 'Conjunction', target: 0, maxOrb: ORBS.conjunction, symbol: '☌' },
-  { name: 'Opposition', target: 180, maxOrb: ORBS.opposition, symbol: '☍' },
-  { name: 'Trine', target: 120, maxOrb: ORBS.trine, symbol: '△' },
-  { name: 'Square', target: 90, maxOrb: ORBS.square, symbol: '□' },
-  { name: 'Sextile', target: 60, maxOrb: ORBS.sextile, symbol: '⚹' },
-  { name: 'Inconjunct', target: 150, maxOrb: ORBS.inconjunct, symbol: '⚻' }
+  { name: 'Conjunction', target: 0, maxOrb: 8, symbol: '☌', weight: 1.00 },
+  { name: 'Opposition', target: 180, maxOrb: 8, symbol: '☍', weight: 0.95 },
+  { name: 'Trine', target: 120, maxOrb: 8, symbol: '△', weight: 0.85 },
+  { name: 'Square', target: 90, maxOrb: 7, symbol: '□', weight: 0.90 },
+  { name: 'Sextile', target: 60, maxOrb: 6, symbol: '⚹', weight: 0.65 },
+  { name: 'Inconjunct', target: 150, maxOrb: 3, symbol: '⚻', weight: 0.55 }
 ];
 
-// Helper to choose color per aspect (simple)
+// Planet importance (0..10)
+const PLANET_IMPORTANCE = {
+  sun: 9, moon: 10, mercury: 5, venus: 7, mars: 8, jupiter: 8, saturn: 9, uranus: 6, neptune: 6, pluto: 7
+};
+
+// Default top N to show in compact view
+export const DEFAULT_TOP_N = 6;
+
+/**
+ * Determine which aspect object applies for a given angle (0..180).
+ * Returns { name, symbol, maxOrb, orb, weight } or null.
+ */
+function determineAspect(angle) {
+  for (const a of ASPECTS) {
+    const orb = Math.abs(angle - a.target);
+    if (orb <= a.maxOrb) {
+      return { ...a, orb: parseFloat(orb.toFixed(2)) };
+    }
+  }
+  return null;
+}
+
+function capitalize(s) { return s ? s[0].toUpperCase() + s.slice(1) : s; }
+
+/**
+ * Check if transit planet is applying to natal (small +1h test)
+ * date: JS Date (local)
+ */
+function isApplying(transitPlanetName, natalAbsolute, date) {
+  try {
+    const cap = capitalize(transitPlanetName);
+    const t0 = calculatePlanetPosition(cap, date);
+    const later = new Date(date.getTime() + 60 * 60 * 1000); // +1 hour
+    const t1 = calculatePlanetPosition(cap, later);
+    if (!t0 || !t1 || t0.absoluteDegree == null || t1.absoluteDegree == null) return false;
+    const angleNow = calculateAngle(t0.absoluteDegree, natalAbsolute);
+    const angleLater = calculateAngle(t1.absoluteDegree, natalAbsolute);
+    return angleLater < angleNow; // decreasing -> applying
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Calculate transit events (all candidates) for a given calendarDate (local date).
+ * Returns an array of events with meta.score, sorted descending (highest score first).
+ *
+ * Event format (compatible with rendering):
+ * {
+ *   id: 'transit-YYYYMMDD-transit-natal-aspect',
+ *   title: '☉ Sun ☌ natal ♀ Venus',
+ *   date: Date (local),
+ *   startTime: 0,
+ *   endTime: 1440,
+ *   color: '#...', // color by aspect
+ *   meta: { transitPlanet, natalPlanet, aspect, orb, angle, transitPos, natalPos, score }
+ * }
+ */
+export function getTransitEventsForDate(calendarDate) {
+  // load natal chart
+  let natal = null;
+  try {
+    const raw = localStorage.getItem('birthChart');
+    if (!raw) return [];
+    natal = JSON.parse(raw);
+  } catch (e) {
+    console.warn('Failed to parse birthChart from localStorage', e);
+    return [];
+  }
+
+  // sample transit positions at local midday to avoid UTC date shifts
+  const y = calendarDate.getFullYear();
+  const m = calendarDate.getMonth();
+  const d = calendarDate.getDate();
+  const sampleLocal = new Date(y, m, d, 12, 0, 0);
+
+  // compute transit absolute positions for each planet
+  const transitPositions = {};
+  for (const p of PLANETS) {
+    try {
+      const pos = calculatePlanetPosition(capitalize(p), sampleLocal);
+      transitPositions[p] = pos;
+    } catch (e) {
+      transitPositions[p] = null;
+    }
+  }
+
+  const scored = [];
+
+  for (const transitKey of PLANETS) {
+    const transitPos = transitPositions[transitKey];
+    if (!transitPos || transitPos.absoluteDegree == null) continue;
+
+    for (const natalKey of PLANETS) {
+      const natalData = natal[natalKey];
+      if (!natalData || natalData.absoluteDegree == null) continue;
+
+      const angle = calculateAngle(transitPos.absoluteDegree, natalData.absoluteDegree);
+      const aspect = determineAspect(angle);
+      if (!aspect) continue;
+
+      // Scoring components
+      const closenessScore = (aspect.maxOrb - aspect.orb) / aspect.maxOrb; // 0..1
+      const aspectWeight = aspect.weight || 0.7;
+      const impTransit = PLANET_IMPORTANCE[transitKey] || 5;
+      const impNatal = PLANET_IMPORTANCE[natalKey] || 5;
+      const planetImportanceScore = (impTransit + impNatal) / 20; // 0..1
+      const angularBoost = natalData.house && [1,4,7,10].includes(Number(natalData.house)) ? 0.12 : 0;
+      const applyingBoost = isApplying(transitKey, natalData.absoluteDegree, sampleLocal) ? 0.05 : 0;
+
+      // Moon damping (reduce prominence for non-exact moon transits)
+      const moonMultiplier = (transitKey === 'moon' && aspect.orb > 3) ? 0.5 : 1.0;
+
+      const base = (closenessScore * 0.5) + (aspectWeight * 0.2) + (planetImportanceScore * 0.15) + angularBoost + applyingBoost;
+      const finalScore = Math.min(1.0, base) * moonMultiplier;
+
+      const transitSymbol = PLANET_SYMBOLS[transitKey] || '';
+      const natalSymbol = PLANET_SYMBOLS[natalKey] || '';
+      const title = `${transitSymbol} ${capitalize(transitKey)} ${aspect.symbol} natal ${natalSymbol} ${capitalize(natalKey)}`;
+
+      const id = `transit-${y}${String(m+1).padStart(2,'0')}${String(d).padStart(2,'0')}-${transitKey}-${natalKey}-${aspect.name}`;
+
+      scored.push({
+        id,
+        title,
+        date: new Date(y, m, d, 12, 0, 0),
+        startTime: 0,
+        endTime: 1440,
+        color: aspectColor(aspect.name),
+        meta: {
+          transitPlanet: transitKey,
+          natalPlanet: natalKey,
+          aspect: aspect.name,
+          symbol: aspect.symbol,
+          orb: aspect.orb,
+          angle: parseFloat(angle.toFixed(2)),
+          transitPos,
+          natalPos: natalData,
+          score: parseFloat(finalScore.toFixed(4))
+        }
+      });
+    }
+  }
+
+  // sort by score desc then by closeness (lower orb)
+  scored.sort((a,b) => {
+    const sa = a.meta.score || 0;
+    const sb = b.meta.score || 0;
+    if (sb !== sa) return sb - sa;
+    return (a.meta.orb || 0) - (b.meta.orb || 0);
+  });
+
+  return scored;
+}
+
 function aspectColor(typeName) {
   switch (typeName) {
     case 'Conjunction': return '#7c3aed'; // purple
@@ -38,115 +184,4 @@ function aspectColor(typeName) {
     case 'Inconjunct': return '#64748b'; // gray
     default: return '#6b7280';
   }
-}
-
-function determineAspect(angle) {
-  for (const a of ASPECTS) {
-    const orb = Math.abs(angle - a.target);
-    if (orb <= a.maxOrb) {
-      return {
-        name: a.name,
-        symbol: a.symbol,
-        orb: parseFloat(orb.toFixed(2))
-      };
-    }
-  }
-  return null;
-}
-
-function capitalize(name) {
-  if (!name) return name;
-  return name[0].toUpperCase() + name.slice(1);
-}
-
-/**
- * Get natal chart from localStorage (same format produced by calculateBirthChart)
- */
-function loadNatalChartFromStorage() {
-  try {
-    const raw = localStorage.getItem('birthChart');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return parsed;
-  } catch (err) {
-    console.warn('Failed to load birthChart from localStorage', err);
-    return null;
-  }
-}
-
-/**
- * Compute transit events for a given Date (calendar day).
- * Returns an array of event objects:
- * { id, title, date: Date (local), startTime: 0, endTime: 1440, color, meta: {...} }
- */
-export function getTransitEventsForDate(calendarDate) {
-  const natal = loadNatalChartFromStorage();
-  if (!natal) return [];
-
-  // Use local-midday on the calendar day to evaluate planetary positions (avoids UTC shift)
-  const y = calendarDate.getFullYear();
-  const m = calendarDate.getMonth();
-  const d = calendarDate.getDate();
-  const transitSampleLocal = new Date(y, m, d, 12, 0, 0); // local midday
-
-  // Build transit positions
-  const transitPositions = {};
-  for (const key of PLANET_KEYS) {
-    const cap = capitalize(key);
-    try {
-      const pos = calculatePlanetPosition(cap, transitSampleLocal);
-      transitPositions[key] = pos; // { sign, degree, absoluteDegree }
-    } catch (err) {
-      transitPositions[key] = null;
-    }
-  }
-
-  const events = [];
-
-  // Compare each transit planet to each natal planet
-  for (const transitKey of PLANET_KEYS) {
-    const transitPos = transitPositions[transitKey];
-    if (!transitPos || transitPos.absoluteDegree == null) continue;
-
-    for (const natalKey of PLANET_KEYS) {
-      const natalData = natal[natalKey];
-      if (!natalData || natalData.absoluteDegree == null) continue;
-
-      const angle = calculateAngle(transitPos.absoluteDegree, natalData.absoluteDegree);
-      const aspect = determineAspect(angle);
-      if (!aspect) continue;
-
-      const transitSymbol = PLANET_SYMBOLS[transitKey] || '';
-      const natalSymbol = PLANET_SYMBOLS[natalKey] || '';
-
-      // Title like: "☉ Sun ☌ natal ♀ Venus"
-      const title = `${transitSymbol} ${capitalize(transitKey)} ${aspect.symbol} natal ${natalSymbol} ${capitalize(natalKey)}`;
-
-      // Unique id for transit event (stable for a given date/aspect)
-      const id = `transit-${y}${String(m+1).padStart(2,'0')}${String(d).padStart(2,'0')}-${transitKey}-${natalKey}-${aspect.name}`;
-
-      // Use local date for the event date — this matches the calendar's date objects
-      const localDateForEvent = new Date(y, m, d, 12, 0, 0);
-
-      events.push({
-        id,
-        title,
-        date: localDateForEvent,
-        startTime: 0,
-        endTime: 1440,
-        color: aspectColor(aspect.name),
-        meta: {
-          transitPlanet: transitKey,
-          natalPlanet: natalKey,
-          aspect: aspect.name,
-          orb: aspect.orb,
-          angle: parseFloat(angle.toFixed(2)),
-          transitPos,
-          natalPos: natalData
-        }
-      });
-    }
-  }
-
-  return events;
 }
