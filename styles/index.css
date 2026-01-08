@@ -82,7 +82,7 @@ body {
 
 .main {
   flex: 1; /* Main content takes remaining space */
-  overflow: hidden;
+  overflow: auto;
 }
 
 .calendar {
