@@ -1,6 +1,8 @@
-// Day dropdown with prioritized transit list, filters and smooth animation
-// Responsive: fullscreen drawer on narrow screens, larger pills on mid/small screens
-// Performance: quick preview + deferred full computation so UI stays responsive
+// Day dropdown: absolute overlay panel that expands into available white space (prefers right)
+// - Panel appended to document.body so it can overlay calendar white space (not in-flow)
+// - Computes best placement (right/left), clamps width/height to available space
+// - Smooth expand/collapse (max-height animation) and enables scrolling
+// - Keeps filters (Planet & Aspect), prioritized top N, "Show all" link
 
 import { initStaticEvent } from './event.js';
 import { getTransitEventsForDate, DEFAULT_TOP_N } from './transit-events.js';
@@ -8,153 +10,174 @@ import { getTransitEventsForDate, DEFAULT_TOP_N } from './transit-events.js';
 const openPanels = new Set();
 
 function closeAllPanels() {
-  for (const panelInfo of Array.from(openPanels)) {
-    const { button, panel, container } = panelInfo;
+  for (const info of Array.from(openPanels)) {
     try {
+      const { button, panel } = info;
       if (button) button.setAttribute('aria-expanded', 'false');
       if (panel) {
-        panel.style.overflow = 'hidden';
         panel.style.maxHeight = '0px';
         panel.classList.remove('day-dropdown__panel--open');
         panel.classList.remove('day-dropdown__panel--fullscreen');
+        panel.style.visibility = 'hidden';
       }
-      if (container) container.classList.remove('day-dropdown__container--open');
     } catch (e) {}
-    openPanels.delete(panelInfo);
+    openPanels.delete(info);
   }
 }
 
-/**
- * Animate panel to its content height and enable scrolling quickly.
- * Keeps overflow hidden during transition then sets overflow:auto so wheel events work.
- */
 function animatePanelToContent(panel) {
   if (!panel) return;
-
-  // ensure hidden overflow so height animation is smooth
   panel.style.overflow = 'hidden';
-  // let the browser compute layout, then set maxHeight to scrollHeight
+  // apply the full height on next frames so CSS transition runs
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       panel.style.maxHeight = panel.scrollHeight + 'px';
     });
   });
 
-  // quick enable so first wheel event isn't lost
-  const QUICK_ENABLE_MS = 120; // smaller than transition (220ms)
-  const enableOverflow = () => {
-    try {
-      panel.style.overflow = 'auto';
-    } catch (e) {}
-  };
-  const quickTimer = setTimeout(enableOverflow, QUICK_ENABLE_MS);
+  // enable scrolling quickly so wheel events aren't lost
+  const QUICK_ENABLE_MS = 120;
+  const quickTimer = setTimeout(() => {
+    panel.style.overflow = 'auto';
+  }, QUICK_ENABLE_MS);
 
-  function onTransitionEnd(e) {
+  const onTransition = (e) => {
     if (e.propertyName === 'max-height') {
       clearTimeout(quickTimer);
-      enableOverflow();
-      panel.removeEventListener('transitionend', onTransitionEnd);
+      panel.style.overflow = 'auto';
+      panel.removeEventListener('transitionend', onTransition);
     }
-  }
-  panel.addEventListener('transitionend', onTransitionEnd);
+  };
+  panel.addEventListener('transitionend', onTransition);
 }
 
 /**
- * Render a quick preview (topN if available) and animate open immediately.
- * This avoids blocking the UI while the full (possibly heavy) computation finishes.
+ * Position overlay panel (absolute, appended to body).
+ * Prefers placing to the right of the pill. If not enough width, tries left.
+ * Top is set to align the panel near the top of the calendar white area (not anchored to pill row).
+ * The panel width/height is clamped to available screen area.
+ *
+ * Inputs:
+ *  - buttonEl: the pill button DOM element
+ *  - panelEl: the panel DOM element (already attached to body)
+ *  - desiredWidth: desired width in px
+ *  - desiredMaxHeight: desired max height in px
  */
-function renderFastPreviewAndAnimate(panel, list, transitFull, topN) {
-  const preview = (transitFull && transitFull.length) ? transitFull.slice(0, topN) : [];
-  // render preview items
-  list.innerHTML = '';
-  if (!preview || preview.length === 0) {
-    const li = document.createElement('li');
-    li.className = 'day-dropdown__empty';
-    li.textContent = 'Loading...';
-    list.appendChild(li);
+function positionOverlayPanel(buttonEl, panelEl, desiredWidth = 360, desiredMaxHeight = 420) {
+  const calendarList = document.querySelector('.month-calendar__day-list') || document.querySelector('.month-calendar');
+  const calendarRect = calendarList ? calendarList.getBoundingClientRect() : { left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight };
+  const btnRect = buttonEl.getBoundingClientRect();
+
+  // compute available space to the right and left within calendar area (with small margin)
+  const margin = 12;
+  const availableRight = Math.max(0, calendarRect.right - btnRect.right - margin);
+  const availableLeft = Math.max(0, btnRect.left - calendarRect.left - margin);
+
+  // choose width: prefer desiredWidth but clamp to available space or viewport width
+  let width = Math.min(desiredWidth, window.innerWidth - 2 * margin);
+  let placeRight = true;
+  if (availableRight >= desiredWidth) {
+    placeRight = true;
+    width = Math.min(desiredWidth, availableRight);
+  } else if (availableLeft >= desiredWidth) {
+    placeRight = false;
+    width = Math.min(desiredWidth, availableLeft);
   } else {
-    for (const ev of preview) {
-      const li = document.createElement('li');
-      li.className = 'day-dropdown__event-list-item';
-      initStaticEvent(li, ev);
-      list.appendChild(li);
+    // nowhere large enough for desiredWidth: pick the side with more room
+    if (availableRight >= availableLeft) {
+      placeRight = true;
+      width = Math.max(Math.min(availableRight, width), 180);
+    } else {
+      placeRight = false;
+      width = Math.max(Math.min(availableLeft, width), 180);
     }
   }
 
-  // open visually and animate
-  panel.classList.add('day-dropdown__panel--open');
-  animatePanelToContent(panel);
+  // Determine top: place the panel near the top of the calendar list area so it sits on white space
+  const topMargin = 12;
+  const top = Math.max(calendarRect.top + topMargin, btnRect.top - 8);
+
+  // Determine max available height below top within viewport and calendar
+  const bottomLimit = Math.min(window.innerHeight - margin, calendarRect.bottom - margin);
+  let maxHeight = Math.max(80, bottomLimit - top);
+  maxHeight = Math.min(maxHeight, desiredMaxHeight);
+
+  // set panel style positions
+  panelEl.style.position = 'fixed';
+  panelEl.style.width = width + 'px';
+  panelEl.style.maxHeight = '0px'; // start collapsed
+  panelEl.style.height = 'auto';
+  panelEl.style.left = placeRight ? (btnRect.right + margin) + 'px' : 'auto';
+  panelEl.style.right = placeRight ? 'auto' : (window.innerWidth - btnRect.left + margin) + 'px';
+  panelEl.style.top = top + 'px';
+  panelEl.dataset.desiredMaxHeight = String(maxHeight);
+  // ensure visibility
+  panelEl.style.visibility = 'visible';
 }
 
-export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
-  const wrapper = calendarDayElement.querySelector('[data-month-calendar-event-list-wrapper]');
-  if (!wrapper) return;
-
-  const defaultEventList = wrapper.querySelector('[data-event-list]');
-  if (defaultEventList) defaultEventList.remove();
-
-  const toggleBtn = document.createElement('button');
-  toggleBtn.type = 'button';
-  toggleBtn.className = 'day-dropdown__button';
-  toggleBtn.textContent = String(calendarDay.getDate());
-  toggleBtn.setAttribute('aria-expanded', 'false');
-
+/**
+ * Create a reusable panel element appended to document.body
+ * Returns { panel, headerEl, listEl, transitSelect, aspectSelect, showAllLink, loadingEl }
+ */
+function createOverlayPanelStructure() {
   const panel = document.createElement('div');
-  panel.className = 'day-dropdown__panel';
+  panel.className = 'day-dropdown__panel overlay';
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-hidden', 'true');
+  panel.style.visibility = 'hidden';
   panel.style.maxHeight = '0px';
   panel.style.overflow = 'hidden';
-  panel.style.transition = 'max-height 220ms ease';
+  panel.style.transition = 'max-height 220ms ease, width 120ms ease';
+  panel.style.zIndex = 1400;
 
+  // header
   const header = document.createElement('div');
   header.className = 'day-dropdown__panel-header';
-  header.textContent = calendarDay.toDateString();
   panel.appendChild(header);
 
-  // Filters (Planet + Aspect)
+  // filter bar
   const filterBar = document.createElement('div');
   filterBar.className = 'day-dropdown__filter-bar';
 
-  const planetFilterWrapper = document.createElement('div');
-  planetFilterWrapper.className = 'day-dropdown__filter-wrapper';
+  const planetWrapper = document.createElement('div');
+  planetWrapper.className = 'day-dropdown__filter-wrapper';
   const planetLabel = document.createElement('div');
   planetLabel.className = 'day-dropdown__filter-label';
   planetLabel.textContent = 'Planet';
   const transitSelect = document.createElement('select');
   transitSelect.className = 'day-dropdown__filter';
-  transitSelect.setAttribute('aria-label', 'Filter by transit planet');
-  planetFilterWrapper.appendChild(planetLabel);
-  planetFilterWrapper.appendChild(transitSelect);
+  planetWrapper.appendChild(planetLabel);
+  planetWrapper.appendChild(transitSelect);
 
-  const aspectFilterWrapper = document.createElement('div');
-  aspectFilterWrapper.className = 'day-dropdown__filter-wrapper';
+  const aspectWrapper = document.createElement('div');
+  aspectWrapper.className = 'day-dropdown__filter-wrapper';
   const aspectLabel = document.createElement('div');
   aspectLabel.className = 'day-dropdown__filter-label';
   aspectLabel.textContent = 'Aspect';
   const aspectSelect = document.createElement('select');
   aspectSelect.className = 'day-dropdown__filter';
-  aspectSelect.setAttribute('aria-label', 'Filter by aspect');
-  aspectFilterWrapper.appendChild(aspectLabel);
-  aspectFilterWrapper.appendChild(aspectSelect);
+  aspectWrapper.appendChild(aspectLabel);
+  aspectWrapper.appendChild(aspectSelect);
 
-  const controlsWrapper = document.createElement('div');
-  controlsWrapper.className = 'day-dropdown__controls-small';
-  const clearFiltersBtn = document.createElement('button');
-  clearFiltersBtn.type = 'button';
-  clearFiltersBtn.className = 'day-dropdown__clear-filters';
-  clearFiltersBtn.textContent = 'Clear';
-  controlsWrapper.appendChild(clearFiltersBtn);
+  const controls = document.createElement('div');
+  controls.className = 'day-dropdown__controls-small';
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'day-dropdown__clear-filters';
+  clearBtn.textContent = 'Clear';
+  controls.appendChild(clearBtn);
 
-  filterBar.appendChild(planetFilterWrapper);
-  filterBar.appendChild(aspectFilterWrapper);
-  filterBar.appendChild(controlsWrapper);
+  filterBar.appendChild(planetWrapper);
+  filterBar.appendChild(aspectWrapper);
+  filterBar.appendChild(controls);
   panel.appendChild(filterBar);
 
+  // list
   const list = document.createElement('ul');
   list.className = 'day-dropdown__event-list';
   panel.appendChild(list);
 
+  // show all link
   const showAllLink = document.createElement('div');
   showAllLink.className = 'day-dropdown__show-all-link';
   showAllLink.style.display = 'none';
@@ -167,20 +190,40 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   loading.style.display = 'none';
   panel.appendChild(loading);
 
-  const container = document.createElement('div');
-  container.className = 'day-dropdown__container';
-  container.setAttribute('role', 'group');
-  container.setAttribute('aria-label', `Day ${calendarDay.toDateString()} events`);
-  container.appendChild(toggleBtn);
-  container.appendChild(panel);
-  wrapper.appendChild(container);
+  document.body.appendChild(panel);
+  return { panel, header, list, transitSelect, aspectSelect, showAllLink, loading, clearBtn };
+}
 
+export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
+  const wrapper = calendarDayElement.querySelector('[data-month-calendar-event-list-wrapper]');
+  if (!wrapper) return;
+
+  // remove default event list in-cell
+  const defaultEventList = wrapper.querySelector('[data-event-list]');
+  if (defaultEventList) defaultEventList.remove();
+
+  // pill button inside cell
+  const toggleBtn = document.createElement('button');
+  toggleBtn.type = 'button';
+  toggleBtn.className = 'day-dropdown__button';
+  toggleBtn.textContent = String(calendarDay.getDate());
+  toggleBtn.setAttribute('aria-expanded', 'false');
+  // attach pill into wrapper
+  wrapper.appendChild(toggleBtn);
+
+  // create overlay panel (appended to body)
+  const {
+    panel, header, list, transitSelect, aspectSelect, showAllLink, loading, clearBtn
+  } = createOverlayPanelStructure();
+
+  // State
   let loaded = false;
-  let transitFull = [];    // full scored list
-  let transitFiltered = []; // after applying filters
+  let transitFull = [];
+  let transitFiltered = [];
   let showingAll = false;
   const topN = DEFAULT_TOP_N;
 
+  // event rendering
   function renderListItems(eventsToShow) {
     list.innerHTML = '';
     if (!eventsToShow || eventsToShow.length === 0) {
@@ -230,11 +273,12 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
       if (m.aspect) aspectMap.set(m.aspect, m.symbol || m.aspect);
     }
 
+    // transit select
     transitSelect.innerHTML = '';
-    const allOpt = document.createElement('option');
-    allOpt.value = 'all';
-    allOpt.textContent = 'All';
-    transitSelect.appendChild(allOpt);
+    const optAll = document.createElement('option');
+    optAll.value = 'all';
+    optAll.textContent = 'All';
+    transitSelect.appendChild(optAll);
     Array.from(transitSet).sort().forEach(val => {
       const o = document.createElement('option');
       o.value = val;
@@ -242,11 +286,12 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
       transitSelect.appendChild(o);
     });
 
+    // aspect select
     aspectSelect.innerHTML = '';
-    const allA = document.createElement('option');
-    allA.value = 'all';
-    allA.textContent = 'All';
-    aspectSelect.appendChild(allA);
+    const aAll = document.createElement('option');
+    aAll.value = 'all';
+    aAll.textContent = 'All';
+    aspectSelect.appendChild(aAll);
     Array.from(aspectMap.keys()).sort().forEach(name => {
       const o = document.createElement('option');
       o.value = name;
@@ -256,57 +301,71 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     });
   }
 
+  // Render quick preview (empty or cached) and show immediate open animation
+  function renderFastPreviewAndAnimate() {
+    const preview = (transitFull && transitFull.length) ? transitFull.slice(0, topN) : [];
+    list.innerHTML = '';
+    if (!preview || preview.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'day-dropdown__empty';
+      li.textContent = 'Loading...';
+      list.appendChild(li);
+    } else {
+      for (const ev of preview) {
+        const li = document.createElement('li');
+        li.className = 'day-dropdown__event-list-item';
+        initStaticEvent(li, ev);
+        list.appendChild(li);
+      }
+    }
+    panel.classList.add('day-dropdown__panel--open');
+  }
+
   async function openPanel() {
     closeAllPanels();
 
     toggleBtn.setAttribute('aria-expanded', 'true');
-    container.classList.add('day-dropdown__container--open');
-    openPanels.add({ button: toggleBtn, panel, container });
 
-    if (!loaded) {
-      loading.style.display = 'block';
-
-      // 1) Render fast preview and animate so UI responds immediately
-      renderFastPreviewAndAnimate(panel, list, transitFull, topN);
-
-      // 2) Defer heavy compute so browser can finish animation and respond to input
-      setTimeout(async () => {
-        try {
-          transitFull = await Promise.resolve(getTransitEventsForDate(calendarDay));
-          populateFilterOptions();
-          showingAll = false;
-          applyFiltersAndRender();
-        } catch (err) {
-          list.innerHTML = '';
-          const li = document.createElement('li');
-          li.className = 'day-dropdown__error';
-          li.textContent = 'Error loading events';
-          list.appendChild(li);
-          console.error('Error loading events for day dropdown', err);
-        } finally {
-          loading.style.display = 'none';
-          loaded = true;
-          // fullscreen handling for small viewports
-          if (window.innerWidth <= 900) {
-            panel.classList.add('day-dropdown__panel--fullscreen');
-          } else {
-            panel.classList.remove('day-dropdown__panel--fullscreen');
-          }
-          // animate to final content height and enable scrolling
-          animatePanelToContent(panel);
-        }
-      }, 60);
-    } else {
-      applyFiltersAndRender();
-      if (window.innerWidth <= 900) {
-        panel.classList.add('day-dropdown__panel--fullscreen');
-      } else {
-        panel.classList.remove('day-dropdown__panel--fullscreen');
-      }
-      animatePanelToContent(panel);
-    }
-
+    header.textContent = calendarDay.toDateString();
     panel.setAttribute('aria-hidden', 'false');
+
+    // position panel relative to button + calendar
+    positionOverlayPanel(toggleBtn, panel);
+
+    // show immediate preview & animation
+    renderFastPreviewAndAnimate();
+    animatePanelToContent(panel);
+
+    // defer heavy compute slightly to let animation start
+    setTimeout(async () => {
+      try {
+        transitFull = await Promise.resolve(getTransitEventsForDate(calendarDay));
+        populateFilterOptions();
+        showingAll = false;
+        applyFiltersAndRender();
+      } catch (err) {
+        list.innerHTML = '';
+        const li = document.createElement('li');
+        li.className = 'day-dropdown__error';
+        li.textContent = 'Error loading events';
+        list.appendChild(li);
+        console.error('Error loading events for day dropdown', err);
+      } finally {
+        loaded = true;
+        // clamp panel height to available max (dataset set by positionOverlayPanel)
+        const maxH = parseInt(panel.dataset.desiredMaxHeight || '420', 10);
+        if (panel.scrollHeight > maxH) {
+          panel.style.maxHeight = maxH + 'px';
+          panel.style.overflow = 'auto';
+        } else {
+          panel.style.maxHeight = panel.scrollHeight + 'px';
+          panel.style.overflow = 'auto';
+        }
+        // ensure panel visible (in case positioning changed)
+        panel.style.visibility = 'visible';
+        openPanels.add({ button: toggleBtn, panel });
+      }
+    }, 40);
   }
 
   function closePanel() {
@@ -315,19 +374,15 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     panel.style.maxHeight = '0px';
     panel.classList.remove('day-dropdown__panel--open');
     panel.classList.remove('day-dropdown__panel--fullscreen');
+    panel.style.visibility = 'hidden';
     panel.setAttribute('aria-hidden', 'true');
-    container.classList.remove('day-dropdown__container--open');
 
     for (const info of Array.from(openPanels)) {
       if (info.panel === panel) openPanels.delete(info);
     }
   }
 
-  function nextFrame() {
-    return new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  }
-
-  // Handlers
+  // handlers
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
@@ -335,12 +390,16 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     else openPanel();
   });
 
+  // stop clicks propagating to parent wrapper (which creates events)
   toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+
+  // panel-level event handling (stop propagation so clicks don't create event)
   panel.addEventListener('click', (e) => e.stopPropagation());
   panel.addEventListener('pointerdown', (e) => e.stopPropagation());
 
+  // outside click closes panel
   document.addEventListener('click', (event) => {
-    if (!container.contains(event.target)) {
+    if (panel && !panel.contains(event.target) && event.target !== toggleBtn) {
       if (panel.classList.contains('day-dropdown__panel--open')) closePanel();
     }
   });
@@ -348,41 +407,32 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   transitSelect.addEventListener('change', () => {
     showingAll = false;
     applyFiltersAndRender();
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = panel.scrollHeight + 'px';
+    // animate to new height if needed
     animatePanelToContent(panel);
   });
-
   aspectSelect.addEventListener('change', () => {
     showingAll = false;
     applyFiltersAndRender();
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = panel.scrollHeight + 'px';
     animatePanelToContent(panel);
   });
 
   showAllLink.addEventListener('click', () => {
     showingAll = !showingAll;
     applyFiltersAndRender();
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = panel.scrollHeight + 'px';
+    // after changing content, ensure panel height available and animate
     animatePanelToContent(panel);
   });
 
-  clearFiltersBtn.addEventListener('click', () => {
+  clearBtn.addEventListener('click', () => {
     transitSelect.value = 'all';
     aspectSelect.value = 'all';
     showingAll = false;
     applyFiltersAndRender();
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = panel.scrollHeight + 'px';
     animatePanelToContent(panel);
   });
 
+  // keyboard
   panel.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closePanel();
-      toggleBtn.focus();
-    }
+    if (e.key === 'Escape') closePanel();
   });
 }

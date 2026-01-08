@@ -1,4 +1,4 @@
-/* Day dropdown UI: compact filters (Planet + Aspect), show-all as blue link, pill expands in-flow */
+/* Day dropdown overlay styles (absolute panel) + compact pill */
 
 /* Host cell tweaks */
 .month-calendar__day {
@@ -22,15 +22,6 @@
   padding-bottom: 6px;
 }
 
-/* Container */
-.day-dropdown__container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-}
-
 /* Pill */
 .day-dropdown__button {
   display: inline-block;
@@ -43,62 +34,47 @@
   font-size: 14px;
   margin: 8px 0;
   width: calc(100% - 32px);
-  max-width: 260px; /* slightly wider for readability */
+  max-width: 260px;
   text-align: center;
-  transition: border-radius 120ms ease, box-shadow 120ms ease;
-  box-shadow: none;
+  transition: box-shadow 120ms ease;
 }
 .day-dropdown__button:hover {
   background: rgba(0,0,0,0.03);
 }
 
-.day-dropdown__container--open .day-dropdown__button {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Panel in-flow, animated via max-height */
+/* Overlay panel (absolute, appended to body) */
 .day-dropdown__panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 360px;
   max-height: 0;
   overflow: hidden;
-  transition: max-height 220ms ease;
-  width: calc(100% - 32px);
+  transition: max-height 220ms ease, width 120ms ease;
   background: #fff;
   border: 1px solid rgba(0,0,0,0.08);
-  border-top: 0;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
   padding: 0;
   box-sizing: border-box;
-  margin: 0 0 8px 0;
+  z-index: 1400;
+  visibility: hidden;
 }
 
-/* panel fullscreen mode (applies on small screens via JS) */
-.day-dropdown__panel--fullscreen {
-  position: fixed !important;
-  left: 8px;
-  right: 8px;
-  top: 80px;
-  width: auto !important;
-  max-height: calc(100vh - 120px) !important;
-  margin: 0 !important;
-  border-radius: 12px !important;
-  padding: 0 !important;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.16) !important;
-  z-index: 1200 !important;
-  overflow: auto !important;
+/* when open we set max-height in JS */
+.day-dropdown__panel--open {
+  /* nothing here; JS controls max-height */
 }
 
-/* header */
+/* Panel header */
 .day-dropdown__panel-header {
-  padding: 8px;
+  padding: 8px 12px;
   font-weight: 600;
   font-size: 13px;
   border-bottom: 1px solid #eef2f7;
 }
 
-/* compact filter bar */
+/* Filters */
 .day-dropdown__filter-bar {
   display: flex;
   gap: 8px;
@@ -108,38 +84,27 @@
   border-bottom: 1px solid #f3f4f6;
   flex-wrap: wrap;
 }
-
-/* tiny wrapper for each filter with label */
 .day-dropdown__filter-wrapper {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 84px;
 }
-
-/* small label */
 .day-dropdown__filter-label {
   font-size: 11px;
   color: #374151;
   font-weight: 600;
 }
-
-/* small selects */
 .day-dropdown__filter {
   padding: 6px 8px;
   font-size: 12px;
   border-radius: 6px;
   border: 1px solid #e5e7eb;
   background: #fff;
-  min-width: 80px;
 }
 
-/* tiny clear button */
-.day-dropdown__controls-small {
-  display: flex;
-  align-items: center;
-  margin-left: auto;
-}
+/* small clear control */
+.day-dropdown__controls-small { display:flex; align-items:center; margin-left:auto; }
 .day-dropdown__clear-filters {
   padding: 6px 10px;
   font-size: 12px;
@@ -149,32 +114,31 @@
   cursor: pointer;
 }
 
-/* list */
+/* Event list */
 .day-dropdown__event-list {
   list-style: none;
   padding: 8px;
   margin: 0;
-  display: flex;
+  display:flex;
   flex-direction: column;
   gap: 8px;
 }
 
-/* show-all link (blue, bold) under the list */
+/* show-all link styled */
 .day-dropdown__show-all-link {
   padding: 8px 12px;
   color: var(--color-blue-600);
   font-weight: 700;
   cursor: pointer;
-  text-decoration: none;
 }
 
-/* ensure each rendered event fills width */
+/* Items fill width */
 .day-dropdown__event-list-item > .event {
   width: 100%;
   box-sizing: border-box;
 }
 
-/* loading / empty */
+/* Loading / empty */
 .day-dropdown__loading,
 .day-dropdown__empty,
 .day-dropdown__error {
@@ -183,8 +147,7 @@
   font-size: 13px;
 }
 
-/* ---------- Responsive tweaks ---------- */
-/* Larger pills on medium / small screens */
+/* Responsive tweaks */
 @media (max-width: 1366px) {
   .day-dropdown__button {
     padding: 10px 28px;
@@ -192,42 +155,17 @@
     max-width: 320px;
     width: calc(100% - 24px);
   }
-
-  .day-dropdown__filter {
-    font-size: 13px;
-    min-width: 96px;
-  }
-
-  .day-dropdown__filter-label {
-    font-size: 11px;
-  }
-
-  .month-calendar__day {
-    min-height: 56px; /* more vertical breathing room */
-  }
+  .day-dropdown__filter { font-size: 13px; min-width: 96px; }
+  .month-calendar__day { min-height: 56px; }
 }
 
-/* On narrow screens, open dropdown as a fullscreen drawer for readability */
 @media (max-width: 900px) {
-  .day-dropdown__button {
-    padding: 12px 28px;
-    font-size: 16px;
-    max-width: 360px;
-    width: calc(100% - 32px);
-  }
+  /* keep pill larger on small screens */
+  .day-dropdown__button { padding: 12px 28px; font-size: 16px; max-width: 360px; width: calc(100% - 32px); }
 
-  .month-calendar__day-list {
-    grid-column-gap: 8px;
-    grid-row-gap: 8px;
-    padding: 8px;
-  }
+  /* reduced grid gaps */
+  .month-calendar__day-list { grid-column-gap: 8px; grid-row-gap: 8px; padding: 8px; }
 
-  .day-dropdown__show-all-link {
-    padding-left: 12px;
-    padding-top: 6px;
-  }
-
-  .day-dropdown__filter-bar { gap: 6px; padding: 6px; }
-  .day-dropdown__filter-wrapper { min-width: 72px; }
-  .day-dropdown__filter { padding: 6px; font-size: 13px; }
+  /* on very small viewports we still keep overlay but set width to near-full */
+  .day-dropdown__panel { width: calc(100vw - 32px); left: 16px; right: 16px; top: 80px; max-height: calc(100vh - 120px); }
 }
