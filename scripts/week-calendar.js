@@ -31,7 +31,7 @@ export function initWeekCalendar(parent, selectedDate, eventStore, isSingleDay, 
 
     if (deviceType === "desktop" || (deviceType === "mobile" && isTheSameDay(weekDay, selectedDate))) {
       initAllDayListItem(allDayListElement, allDayEvents); 
-      initColumn(calendarColumnsElement, weekDay, nonAllDayEvents);
+      initColumn(calendarColumnsElement, weekDay, events);
     }
   }
 
@@ -51,18 +51,16 @@ export function initWeekCalendar(parent, selectedDate, eventStore, isSingleDay, 
 function initDayOfWeek(parent, selectedDate, weekDay, deviceType) {
   const calendarDayOfWeekContent = calendarDayOfWeekTemplateElement.content.cloneNode(true);
   const calendarDayOfWeekElement = calendarDayOfWeekContent.querySelector('[data-week-calendar-day-of-week]');
-  const calendarDayOfWeekButtonElement = calendarDayOfWeekElement.querySelector('[data-week-calendar-day-of-week-button]'); 
+  const calendarDayOfWeekButtonElement = calendarDayOfWeekElement.querySelector('[data-week-calendar-day-of-week-button]');
   const calendarDayOfWeekDayElement = calendarDayOfWeekElement.querySelector('[data-week-calendar-day-of-week-day]');
   const calendarDayOfWeekNumberElement = calendarDayOfWeekElement.querySelector('[data-week-calendar-day-of-week-number]');
 
-  calendarDayOfWeekNumberElement.textContent = weekDay.getDate();
+  // Fill in text
   calendarDayOfWeekDayElement.textContent = dateFormatter.format(weekDay);
+  calendarDayOfWeekNumberElement.textContent = String(weekDay.getDate());
 
-  if (isTheSameDay(today(), weekDay)) { 
-    calendarDayOfWeekButtonElement.classList.add('week-calendar__day-of-week-button--highlight');
-  }
-
-  if (isTheSameDay(selectedDate, weekDay)) {
+  // Mark selected
+  if (isTheSameDay(weekDay, selectedDate)) {
     calendarDayOfWeekButtonElement.classList.add('week-calendar__day-of-week-button--selected');
   }
 
@@ -72,16 +70,15 @@ function initDayOfWeek(parent, selectedDate, weekDay, deviceType) {
       bubbles: true
     }));
 
-    if (deviceType === "mobile") {
+    if (deviceType === 'mobile') {
       document.dispatchEvent(new CustomEvent('view-change', {
-        detail: { view: 'day' 
-        },
+        detail: { view: 'day' },
         bubbles: true
-      }));  
+      }));
     }
   });
 
-  parent.appendChild(calendarDayOfWeekElement); 
+  parent.appendChild(calendarDayOfWeekElement);
 }
 
 function initAllDayListItem(parent, events) {
@@ -106,24 +103,9 @@ function initColumn(parent, weekDay, events) {
     );
   }
 
-  for (const calendarColumnCellElement of calendarColumnCellElements) {
-    const cellStartTime = Number.parseInt(
-      calendarColumnCellElement.dataset.weekCalendarCell,
-      10
-    );
-    const cellEndTime = cellStartTime + 60;
-
-    calendarColumnCellElement.addEventListener("click", () => {
-      document.dispatchEvent(new CustomEvent('event-create-request', {
-        detail: {
-          date: weekDay,
-          startTime: cellStartTime,
-          endTime: cellEndTime
-        },
-        bubbles: true
-      }));
-    });
-  }
+  // NOTE: removed click handlers on calendarColumnCellElement that previously
+  // dispatched 'event-create-request' when clicking in empty hour cells.
+  // Event creation remains available via the main "Create event" button.
 
   parent.appendChild(calendarColumnElement);
 }
@@ -132,6 +114,7 @@ function initColumn(parent, weekDay, events) {
 
 function calculateEventsDynamicStyles(events) {
   const { eventGroups, totalColumns } = groupEvents(events);
+  if (totalColumns === 0) return [];
   console.log(eventGroups);
   const columnWidth = 100 / totalColumns;
   const initialEventGroupItems = [];

@@ -1,7 +1,6 @@
-import {generateMonthCalendarDays, today, isTheSameDay} from "./date.js";  
-import {isEventAllDay, eventStartsBefore} from "./event.js"; 
-import {attachDayDropdown} from "./day-dropdown.js";
-
+import { generateMonthCalendarDays, today, isTheSameDay } from "./date.js";
+import { isEventAllDay, eventStartsBefore } from "./event.js";
+import { attachDayDropdown } from "./day-dropdown.js";
 
 const calendarTemplateElement = document.querySelector("[data-template ='month-calendar']");
 const calendarDayTemplateElement = document.querySelector('[data-template="month-calendar-day"]');
@@ -10,7 +9,6 @@ const calendarWeekClasses = {
   5: "five-week",
   6: "six-week"
 }
-
 
 export function initMonthCalendar(parent, selectedDate, eventStore) {
   const calendarContent = calendarTemplateElement.content.cloneNode(true);
@@ -38,16 +36,15 @@ function initCalendarDay(parent, calendarDay, events, eventStore) {
   const calendarDayLabelElement = calendarDayContent.querySelector('[data-month-calendar-day-label]');
   const calendarEventListWrapper = calendarDayElement.querySelector('[data-month-calendar-event-list-wrapper]');
 
-
   if (isTheSameDay(today(), calendarDay)) {
     calendarDayLabelElement.classList.add('month-calendar__day--highlight');
-
   }
 
   calendarDayLabelElement.textContent = calendarDay.getDate();
   // Use eventStore so the dropdown can call eventStore.getEventsByDate(date) lazily
   attachDayDropdown(calendarDayElement, calendarDay, eventStore);
 
+  // navigate to day view when the date label is clicked (keep this behavior)
   calendarDayLabelElement.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('date-change', {
       detail: {
@@ -61,19 +58,13 @@ function initCalendarDay(parent, calendarDay, events, eventStore) {
         view: 'day'
       },
       bubbles: true
-    }));  
+    }));
   });
 
-  calendarEventListWrapper.addEventListener("click", () => {
-    document.dispatchEvent(new CustomEvent('event-create-request', {
-      detail: {
-        date: calendarDay,
-        startTime: 600,
-        endTime: 960
-      },
-      bubbles: true
-    }));
-  })
+  // NOTE: removed the calendarEventListWrapper click handler that previously fired
+  // event-create-request when clicking inside the empty area of a day cell.
+  // This prevents creating events by clicking between pills. Creation still works
+  // via the main "Create event" button which dispatches 'event-create-request'.
 
   parent.appendChild(calendarDayElement);
 }
@@ -88,6 +79,6 @@ function sortCalendarDayEvents(events) {
       return 1;
     }
 
-    return eventStartsBefore(eventA, eventB) ? -1 : 1; 
+    return eventStartsBefore(eventA, eventB) ? -1 : 1;
   });
 }
