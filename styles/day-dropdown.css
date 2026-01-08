@@ -116,3 +116,30 @@
   max-height: 0;
   transition: max-height 220ms ease;
 }
+
+/* Tweak the "Show all" control: smaller font and regular weight (not bold) */
+.day-dropdown__show-all-link,
+.day-dropdown__overlay-show-all {
+  font-size: 13px;           /* reduce font size */
+  font-weight: 400;          /* normal weight (remove bold) */
+  color: var(--color-blue-600, #2563eb);
+  text-decoration: none;     /* keeps it clean; use underline on hover */
+  padding: 6px 8px;
+  display: inline-block;     /* keeps spacing predictable */
+  line-height: 1.2;
+}
+
+/* Subtle hover state so it still feels interactive */
+.day-dropdown__show-all-link:hover,
+.day-dropdown__overlay-show-all:hover {
+  color: color-mix(in srgb, var(--color-blue-600, #2563eb) 85%, black 15%);
+  text-decoration: underline;
+}
+
+/* If you want it even lighter (less visual weight), uncomment this:
+.day-dropdown__show-all-link,
+.day-dropdown__overlay-show-all {
+  color: #1d4ed8;  / * slightly darker blue * /
+  opacity: 0.92;
+}
+*/

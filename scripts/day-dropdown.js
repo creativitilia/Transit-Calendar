@@ -275,7 +275,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     // showShowAll if more than TOP_IN_PILL
     if (allTransits && allTransits.length > TOP_IN_PILL) {
       showAll.style.display = 'block';
-      showAll.textContent = `Show all (${allTransits.length})`;
+      showAll.textContent = `Show all... (${allTransits.length})`;
       showAll.addEventListener('click', (e) => {
         e.stopPropagation();
         // open right drawer with full list
