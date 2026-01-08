@@ -16,6 +16,7 @@
 @import "./color-select.css";
 @import "./toaster.css";
 @import "./mini-calendar.css";
+@import "./day-dropdown.css";
 
 
 * {
