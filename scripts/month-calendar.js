@@ -1,6 +1,6 @@
 import {generateMonthCalendarDays, today, isTheSameDay} from "./date.js";  
 import {isEventAllDay, eventStartsBefore} from "./event.js"; 
-import {initEventList} from "./event-list.js";
+import {attachDayDropdown} from "./day-dropdown.js";
 
 
 const calendarTemplateElement = document.querySelector("[data-template ='month-calendar']");
@@ -48,7 +48,7 @@ function initCalendarDay(parent, calendarDay, events) {
   }
 
   calendarDayLabelElement.textContent = calendarDay.getDate();
-  initEventList(calendarDayElement, events);
+  attachDayDropdown(calendarDayElement, calendarDay, eventStore);
 
   calendarDayLabelElement.addEventListener('click', () => {
     document.dispatchEvent(new CustomEvent('date-change', {

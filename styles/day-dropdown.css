@@ -1,0 +1,62 @@
+/* Add to styles/index.css or styles/day-dropdown.css */
+.day-dropdown__button{
+  display:inline-block;
+  padding:8px 12px;
+  border-radius:18px;
+  background:#0f5132; /* deep green pill as in your mockup */
+  color:#fff;
+  border:none;
+  cursor:pointer;
+  font-size:13px;
+  margin:6px 0;
+}
+
+.day-dropdown__panel{
+  display:none;
+  position:relative;
+  margin-top:8px;
+  background:#fff;
+  border-radius:8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  max-height:280px;
+  overflow:auto;
+  padding:8px;
+  z-index:20;
+}
+
+/* When open */
+.day-dropdown__panel--open{
+  display:block;
+}
+
+/* header */
+.day-dropdown__panel-header{
+  font-weight:600;
+  font-size:13px;
+  color:#111827;
+  padding:6px 8px;
+  border-bottom:1px solid #eef2f7;
+}
+
+/* list */
+.day-dropdown__event-list{
+  list-style:none;
+  padding:8px;
+  margin:0;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.day-dropdown__event-list-item{
+  display:block;
+}
+
+/* loading / empty */
+.day-dropdown__loading,
+.day-dropdown__empty,
+.day-dropdown__error {
+  padding:8px;
+  color:#374151;
+  font-size:13px;
+}
