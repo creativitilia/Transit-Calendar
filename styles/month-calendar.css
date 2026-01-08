@@ -19,35 +19,25 @@
   font-weight: 500;
 }
 
-/* keep wrapper but allow grid to grow/shrink */
-.month-calendar__day-list-wrapper{
+/* allow grid to grow/shrink; rows auto-size so a row expands only when content grows */
+.month-calendar__day-list-wrapper {
   position: relative;
 }
 
-/* Use a grid with auto rows so each week row can grow independently.
-   Add small gaps to keep pills compact when closed. */
 .month-calendar__day-list {
   list-style-type: none;
   position: relative;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-column-gap: 12px;
-  grid-row-gap: 20px;
+  grid-row-gap: 12px;
   padding: 12px 8px;
 }
 
-/* Four/Five/Six week rows use auto so rows grow to content height */
-.month-calendar--four-week .month-calendar__day-list {
-  grid-template-rows: repeat(4, auto);
-}
-
-.month-calendar--five-week .month-calendar__day-list {
-  grid-template-rows: repeat(5, auto);
-}
-
-.month-calendar--six-week .month-calendar__day-list {
-  grid-template-rows: repeat(6, auto);
-}
+/* Four/Five/Six week rows */
+.month-calendar--four-week .month-calendar__day-list { grid-template-rows: repeat(4, auto); }
+.month-calendar--five-week .month-calendar__day-list { grid-template-rows: repeat(5, auto); }
+.month-calendar--six-week .month-calendar__day-list { grid-template-rows: repeat(6, auto); }
 
 .month-calendar__day {
   border: 0;
@@ -57,36 +47,13 @@
   position: relative;
   align-items: center;
   justify-content: flex-start;
-  min-height: 48px; /* give minimum row height for compact pills */
+  min-height: 56px; /* slightly taller for comfortable pills */
 }
 
-.month-calendar__day--highlight {
-  background-color: var(--color-blue-50);
-}
-
-.month-calendar__day:nth-child(7n) {
-  border-right: 0;
-}
-
-.month-calendar--four-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
-
-.month-calendar--five-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
-
-.month-calendar--six-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
-
+/* HIDE built-in calendar labels so we don't show duplicate date numbers.
+   The visible date is rendered by the pill/button inside each cell. */
 .month-calendar__day-label {
-  width: 100%;
-  padding: 0.5rem 0;
-  background-color: transparent;
-  border: 0;
-  cursor: pointer;
-  color: var(--color-text-dark);
+  display: none !important;
 }
 
 /* Event wrapper becomes the area where the pill is centered */

@@ -1,123 +1,92 @@
-/* Day dropdown UI + small month-grid tweaks to host the pill dropdown */
+/* In-cell expandable pill and right-drawer styles */
 
-/* Host cell tweaks */
-.month-calendar__day {
-  border: 0; /* remove grid borders */
-  position: relative; /* required so the panel can be in-flow inside the cell */
-  display: flex;
-  flex-direction: column;
-  padding: 8px 6px; /* keep internal spacing */
-  background: transparent;
-}
-
-/* Hide the original small date badge in the corner */
-.month-calendar__day-label {
-  display: none !important;
-}
-
-/* Event wrapper becomes the area where the pill is centered */
-.month-calendar__event-list-wrapper {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 8px; /* small top space */
-  padding-bottom: 8px;
-}
-
-/* Container that holds pill and panel */
-.day-dropdown__container {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-/* Pill toggle — elongated, transparent background, thin border */
+/* Pill */
 .day-dropdown__button {
   display: inline-block;
-  padding: 8px 22px;
+  padding: 10px 26px;
   border-radius: 999px;
-  background: transparent;
+  background: #fff;
   color: var(--color-text-dark);
-  border: 1px solid rgba(0,0,0,0.12);
+  border: 1px solid rgba(15,23,42,0.06);
   cursor: pointer;
-  font-size: 14px;
-  margin: 8px 0;
-  width: calc(100% - 32px);   /* keep pill aligned with cell */
-  max-width: 220px;
-  text-align: center;
-  transition: border-radius 120ms ease, box-shadow 120ms ease;
-  box-shadow: none;
-}
-
-.day-dropdown__button:hover {
-  background: rgba(0,0,0,0.03);
-}
-
-/* When container is opened, button becomes the top of the expanded block:
-   remove bottom border-radius so the panel looks attached */
-.day-dropdown__container--open .day-dropdown__button {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
-/* Panel in-flow, same width as the pill (fit the container) */
-.day-dropdown__panel {
-  display: none;
-  width: calc(100% - 32px);
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-top: 0; /* no double border between pill and panel */
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-  max-height: 220px;
-  overflow: auto;
-  padding: 8px;
-  box-sizing: border-box;
-  margin: 0 0 8px 0;
-}
-
-/* show panel when open */
-.day-dropdown__panel--open {
-  display: block;
-}
-
-/* header */
-.day-dropdown__panel-header {
-  margin-bottom: 8px;
+  font-size: 15px;
   font-weight: 600;
-  font-size: 13px;
-  color: #111827;
+  margin: 8px 0;
+  width: auto;
+  min-width: 56px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(2,6,23,0.04);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.day-dropdown__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(2,6,23,0.06);
 }
 
-/* list */
+/* In-cell panel (in-flow) */
+.day-dropdown__panel.in-cell {
+  display: block;
+  width: calc(100% - 0px);
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.06);
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 220ms ease;
+}
+
+/* header inside in-cell panel */
+.day-dropdown__panel-header {
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  border-bottom: 1px solid #eef2f7;
+  margin-bottom: 8px;
+}
+
+/* Event list inside pill — vertical stacked items, scrollable */
 .day-dropdown__event-list {
   list-style: none;
-  padding: 0;
   margin: 0;
+  padding: 4px 4px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 120px; /* limit height in-pill to avoid pushing too much */
+  overflow: auto;
 }
 
-/* ensure each rendered event fills width */
+/* each event list item contains the .event markup provided by initStaticEvent */
 .day-dropdown__event-list-item > .event {
-  width: 100%;
+  width: 100%; /* full width within the pill area */
   box-sizing: border-box;
 }
 
-/* loading / empty */
-.day-dropdown__loading,
-.day-dropdown__empty,
-.day-dropdown__error {
-  padding: 8px;
-  color: #374151;
-  font-size: 13px;
+/* show-all link in pill */
+.day-dropdown__show-all-link {
+  padding: 6px 8px;
+  color: var(--color-blue-600);
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
 }
 
-/* Make the entire calendar background look cleaner */
-.month-calendar__day-list {
-  background: transparent;
+/* Right drawer styles (unchanged from earlier) */
+.day-dropdown__all-drawer { position: fixed; right: 0; top: 0; width: 420px; height: 100vh; background: transparent; z-index: 1500; display:flex; justify-content:flex-end; pointer-events: none; }
+.day-dropdown__all-drawer-inner { pointer-events:auto; width:420px; height:100vh; background:#fff; box-shadow:-12px 0 30px rgba(2,6,23,0.12); border-left:1px solid rgba(0,0,0,0.06); display:flex; flex-direction:column; }
+.day-dropdown__all-drawer-header { display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid #eef2f7; }
+.day-dropdown__all-drawer-title { font-weight:700; font-size:16px; }
+.day-dropdown__all-drawer-close { padding:6px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
+.day-dropdown__filter-bar--drawer { padding:10px 12px; border-bottom:1px solid #f3f4f6; display:flex; gap:10px; align-items:center; }
+.day-dropdown__filter { padding:7px 8px; font-size:13px; border-radius:6px; border:1px solid #e5e7eb; background:#fff; }
+.day-dropdown__all-list { list-style:none; margin:0; padding:12px; overflow:auto; flex:1; display:flex; flex-direction:column; gap:8px; }
+
+/* small responsive adjustments */
+@media (max-width: 900px) {
+  .day-dropdown__panel.in-cell { width: calc(100% - 16px); margin-left: 8px; margin-right: 8px; }
+  .day-dropdown__all-drawer-inner { width: calc(100vw - 24px); }
 }

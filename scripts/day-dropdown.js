@@ -1,83 +1,86 @@
-// Day dropdown — overlay panel centered under the pill, showing the full scrollable list of transits
-// Behavior:
-// - Click a day pill -> overlay panel appended to body, centered below the pill.
-// - Panel shows the FULL list of transits for that day (scrollable).
-// - Panel is sized so it does not cover the next calendar row: it uses available space below the pill when possible,
-//   otherwise it places above or clamps height so pills below stay visible.
-// - Prevents click bubbling so month-grid create-event handler is not triggered.
-// - Escape or outside click closes the panel.
+// Day dropdown — in-cell expandable pill with top-3 preview and "Show all" opening the right drawer
+// - Expand in-flow inside the day cell (does not overlay other pills)
+// - Shows top 3 aspects, scrollable. "Show all" opens right drawer with full list + filters.
 
 import { initStaticEvent } from './event.js';
 import { getTransitEventsForDate } from './transit-events.js';
 
-let activeOverlay = null;
-let activeDrawer = null; // kept for parity but not used by this exact layout
+const TOP_IN_PILL = 3;
 
-function closeOverlay() {
-  if (!activeOverlay) return;
-  const { panel, button } = activeOverlay;
-  try {
-    if (button) button.setAttribute('aria-expanded', 'false');
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = '0px';
-    panel.style.visibility = 'hidden';
-    panel.classList.remove('day-dropdown__panel--open');
-  } catch (e) {}
-  activeOverlay = null;
-}
+let currentOpen = null; // {cellEl, panelEl, toggleBtn}
+let openDrawer = null;
 
-function animatePanelToContent(panel) {
-  if (!panel) return;
-  panel.style.overflow = 'hidden';
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      panel.style.maxHeight = panel.scrollHeight + 'px';
-    });
-  });
-  const QUICK_ENABLE_MS = 100;
-  const quickTimer = setTimeout(() => { panel.style.overflow = 'auto'; }, QUICK_ENABLE_MS);
-  function onTransition(e) {
-    if (e.propertyName === 'max-height') {
-      clearTimeout(quickTimer);
-      panel.style.overflow = 'auto';
-      panel.removeEventListener('transitionend', onTransition);
-    }
-  }
-  panel.addEventListener('transitionend', onTransition);
-}
+/* Create the right drawer that shows the full list + filters */
+function createRightDrawer() {
+  const drawer = document.createElement('div');
+  drawer.className = 'day-dropdown__all-drawer';
+  drawer.setAttribute('role', 'dialog');
+  drawer.setAttribute('aria-modal', 'true');
 
-/* Create one overlay panel (appended to body). We'll reuse it for each pill. */
-function createOverlayPanel() {
-  const panel = document.createElement('div');
-  panel.className = 'day-dropdown__panel overlay';
-  panel.setAttribute('role', 'region');
-  panel.setAttribute('aria-hidden', 'true');
-  panel.style.visibility = 'hidden';
-  panel.style.maxHeight = '0px';
-  panel.style.overflow = 'hidden';
-  panel.style.transition = 'max-height 200ms ease, width 120ms ease';
-  panel.style.zIndex = 1400;
+  const inner = document.createElement('div');
+  inner.className = 'day-dropdown__all-drawer-inner';
 
   const header = document.createElement('div');
-  header.className = 'day-dropdown__panel-header';
-  panel.appendChild(header);
+  header.className = 'day-dropdown__all-drawer-header';
+  const title = document.createElement('div');
+  title.className = 'day-dropdown__all-drawer-title';
+  title.textContent = 'All aspects';
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'day-dropdown__all-drawer-close';
+  closeBtn.type = 'button';
+  closeBtn.textContent = 'Close';
+  header.appendChild(title);
+  header.appendChild(closeBtn);
+
+  const filterBar = document.createElement('div');
+  filterBar.className = 'day-dropdown__filter-bar day-dropdown__filter-bar--drawer';
+
+  const planetWrapper = document.createElement('div');
+  planetWrapper.className = 'day-dropdown__filter-wrapper';
+  const planetLabel = document.createElement('div');
+  planetLabel.className = 'day-dropdown__filter-label';
+  planetLabel.textContent = 'Planet';
+  const transitSelect = document.createElement('select');
+  transitSelect.className = 'day-dropdown__filter';
+  planetWrapper.appendChild(planetLabel);
+  planetWrapper.appendChild(transitSelect);
+
+  const aspectWrapper = document.createElement('div');
+  aspectWrapper.className = 'day-dropdown__filter-wrapper';
+  const aspectLabel = document.createElement('div');
+  aspectLabel.className = 'day-dropdown__filter-label';
+  aspectLabel.textContent = 'Aspect';
+  const aspectSelect = document.createElement('select');
+  aspectSelect.className = 'day-dropdown__filter';
+  aspectWrapper.appendChild(aspectLabel);
+  aspectWrapper.appendChild(aspectSelect);
+
+  const controls = document.createElement('div');
+  controls.className = 'day-dropdown__controls-small';
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'day-dropdown__clear-filters';
+  clearBtn.textContent = 'Clear';
+  controls.appendChild(clearBtn);
+
+  filterBar.appendChild(planetWrapper);
+  filterBar.appendChild(aspectWrapper);
+  filterBar.appendChild(controls);
 
   const list = document.createElement('ul');
-  list.className = 'day-dropdown__event-list';
-  panel.appendChild(list);
+  list.className = 'day-dropdown__all-list';
 
-  const loading = document.createElement('div');
-  loading.className = 'day-dropdown__loading';
-  loading.textContent = 'Loading...';
-  loading.style.display = 'none';
-  panel.appendChild(loading);
+  inner.appendChild(header);
+  inner.appendChild(filterBar);
+  inner.appendChild(list);
+  drawer.appendChild(inner);
+  document.body.appendChild(drawer);
 
-  document.body.appendChild(panel);
-  return { panel, header, list, loading };
+  return { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
 }
 
-/* Render list of events into a UL (uses initStaticEvent to build each .event element) */
-function renderIntoList(listEl, events) {
+/* Render events into a UL using initStaticEvent */
+function renderEvents(listEl, events) {
   listEl.innerHTML = '';
   if (!events || events.length === 0) {
     const li = document.createElement('li');
@@ -94,78 +97,103 @@ function renderIntoList(listEl, events) {
   }
 }
 
-/* Helper: compute safe position centered under the pill, and clamp height so next row's pills are not covered */
-function positionPanelBelowOrAbove(panel, buttonEl, calendarListSelector = '.month-calendar__day-list') {
-  const btnRect = buttonEl.getBoundingClientRect();
-  const dayList = document.querySelector(calendarListSelector);
-  const calRect = dayList ? dayList.getBoundingClientRect() : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
-  // find top of next row if any
-  const cells = dayList ? Array.from(dayList.querySelectorAll('.month-calendar__day')) : [];
-  const idx = cells.indexOf(buttonEl.closest('.month-calendar__day'));
-  const row = idx >= 0 ? Math.floor(idx / 7) : 0;
-  const nextRowStartIdx = (row + 1) * 7;
-  let nextRowTop = window.innerHeight;
-  if (cells[nextRowStartIdx]) nextRowTop = cells[nextRowStartIdx].getBoundingClientRect().top;
-
-  const margin = 10;
-  const desiredWidth = 320;
-  const width = Math.min(desiredWidth, Math.max(200, window.innerWidth - 2 * margin));
-  panel.style.width = width + 'px';
-
-  // Measure natural height quickly: temporarily show (hidden off-screen) to measure
-  panel.style.visibility = 'hidden';
-  panel.style.maxHeight = 'none';
-  panel.style.position = 'fixed';
-  panel.style.left = '0px';
-  panel.style.top = '-9999px';
-  panel.style.overflow = 'hidden';
-  const naturalHeight = Math.max(80, panel.scrollHeight || 200);
-
-  const availableBelow = Math.max(0, nextRowTop - btnRect.bottom - margin);
-  const availableAbove = Math.max(0, btnRect.top - calRect.top - margin);
-
-  // prefer below if there's space
-  if (availableBelow >= Math.min(naturalHeight, 120)) {
-    const left = Math.max(margin, Math.min(window.innerWidth - margin - width, btnRect.left + btnRect.width / 2 - width / 2));
-    panel.style.left = left + 'px';
-    panel.style.top = (btnRect.bottom + 8) + 'px';
-    panel.style.maxHeight = Math.min(naturalHeight, availableBelow) + 'px';
-  } else if (availableAbove >= Math.min(naturalHeight, 120)) {
-    // place above
-    const left = Math.max(margin, Math.min(window.innerWidth - margin - width, btnRect.left + btnRect.width / 2 - width / 2));
-    const top = Math.max(calRect.top + margin, btnRect.top - Math.min(naturalHeight, availableAbove) - 8);
-    panel.style.left = left + 'px';
-    panel.style.top = top + 'px';
-    panel.style.maxHeight = Math.min(naturalHeight, availableAbove) + 'px';
-  } else {
-    // not enough room either side -> place below but clamp to availableBelow (or availableAbove whichever larger)
-    const usable = Math.max(availableBelow, availableAbove, 100); // always allow at least 100px
-    const left = Math.max(margin, Math.min(window.innerWidth - margin - width, btnRect.left + btnRect.width / 2 - width / 2));
-    if (availableBelow >= availableAbove) {
-      panel.style.left = left + 'px';
-      panel.style.top = (btnRect.bottom + 8) + 'px';
-    } else {
-      panel.style.left = left + 'px';
-      panel.style.top = Math.max(calRect.top + margin, btnRect.top - usable - 8) + 'px';
-    }
-    panel.style.maxHeight = usable + 'px';
-  }
-
-  panel.style.visibility = 'visible';
-  panel.style.overflow = 'hidden';
-  panel.style.position = 'fixed';
+/* Close open in-cell panel if any */
+function closeCurrentInCell() {
+  if (!currentOpen) return;
+  const { panelEl, toggleBtn } = currentOpen;
+  try {
+    panelEl.style.maxHeight = '0px';
+    panelEl.style.overflow = 'hidden';
+    panelEl.classList.remove('day-dropdown__panel--open');
+    toggleBtn.setAttribute('aria-expanded', 'false');
+    // remove after animation
+    setTimeout(() => {
+      if (panelEl.parentNode) panelEl.parentNode.removeChild(panelEl);
+    }, 220);
+  } catch (e) {}
+  currentOpen = null;
 }
 
-/* Exported function used by month-calendar to attach behavior to each day cell */
+/* Open right drawer for that day with filters and full list */
+function openRightDrawer(calendarDay, allTransits) {
+  // close existing drawer
+  if (openDrawer) {
+    try { openDrawer.drawer.parentNode.removeChild(openDrawer.drawer); } catch (e) {}
+    openDrawer = null;
+  }
+
+  const { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title } = createRightDrawer();
+  openDrawer = { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
+
+  title.textContent = `All aspects — ${calendarDay.toDateString()}`;
+
+  // populate select options
+  const transitSet = new Set();
+  const aspectMap = new Map();
+  for (const ev of allTransits) {
+    const m = ev.meta || {};
+    if (m.transitPlanet) transitSet.add(m.transitPlanet);
+    if (m.aspect) aspectMap.set(m.aspect, m.symbol || m.aspect);
+  }
+
+  transitSelect.innerHTML = '';
+  const allP = document.createElement('option'); allP.value = 'all'; allP.textContent = 'All'; transitSelect.appendChild(allP);
+  Array.from(transitSet).sort().forEach(val => {
+    const o = document.createElement('option'); o.value = val; o.textContent = val[0].toUpperCase() + val.slice(1); transitSelect.appendChild(o);
+  });
+
+  aspectSelect.innerHTML = '';
+  const allA = document.createElement('option'); allA.value = 'all'; allA.textContent = 'All'; aspectSelect.appendChild(allA);
+  Array.from(aspectMap.keys()).sort().forEach(name => {
+    const o = document.createElement('option'); o.value = name; o.textContent = `${aspectMap.get(name) || ''} ${name}`; aspectSelect.appendChild(o);
+  });
+
+  function render() {
+    const tVal = transitSelect.value;
+    const aVal = aspectSelect.value;
+    const filtered = (allTransits || []).filter(ev => {
+      const m = ev.meta || {};
+      if (tVal && tVal !== 'all' && m.transitPlanet !== tVal) return false;
+      if (aVal && aVal !== 'all' && m.aspect !== aVal) return false;
+      return true;
+    });
+    renderEvents(list, filtered);
+  }
+
+  render();
+
+  closeBtn.addEventListener('click', () => {
+    try { drawer.parentNode.removeChild(drawer); } catch (e) {}
+    openDrawer = null;
+    document.removeEventListener('click', onDocClickForDrawer);
+  });
+  transitSelect.addEventListener('change', render);
+  aspectSelect.addEventListener('change', render);
+  clearBtn.addEventListener('click', () => { transitSelect.value = 'all'; aspectSelect.value = 'all'; render(); });
+
+  // click outside closes
+  setTimeout(() => document.addEventListener('click', onDocClickForDrawer), 0);
+
+  function onDocClickForDrawer(e) {
+    if (!openDrawer) return;
+    if (!openDrawer.drawer.contains(e.target)) {
+      try { openDrawer.drawer.parentNode.removeChild(openDrawer.drawer); } catch (err) {}
+      openDrawer = null;
+      document.removeEventListener('click', onDocClickForDrawer);
+    }
+  }
+}
+
+/* Export: attach behavior to each day cell */
 export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   const wrapper = calendarDayElement.querySelector('[data-month-calendar-event-list-wrapper]');
   if (!wrapper) return;
 
-  // Remove default in-cell list if present
+  // remove default inside list if present
   const defaultEventList = wrapper.querySelector('[data-event-list]');
   if (defaultEventList) defaultEventList.remove();
 
-  // Create the pill button (date)
+  // create pill button inside cell
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
   toggleBtn.className = 'day-dropdown__button';
@@ -173,82 +201,116 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   toggleBtn.setAttribute('aria-expanded', 'false');
   wrapper.appendChild(toggleBtn);
 
-  // create overlay panel singleton (reused)
-  const { panel, header, list, loading } = createOverlayPanel();
-
-  // state
+  let panelEl = null;
   let loaded = false;
   let allTransits = [];
 
-  async function openPanel() {
-    // close other UI
-    closeOverlay();
+  async function openInCell() {
+    // close any other open in-cell
+    if (currentOpen && currentOpen.toggleBtn !== toggleBtn) closeCurrentInCell();
 
-    toggleBtn.setAttribute('aria-expanded', 'true');
+    // if already open, close
+    if (panelEl && panelEl.parentNode) {
+      closeCurrentInCell();
+      return;
+    }
+
+    // create panel element inside wrapper (in-flow)
+    panelEl = document.createElement('div');
+    panelEl.className = 'day-dropdown__panel in-cell';
+    panelEl.style.maxHeight = '0px';
+    panelEl.style.overflow = 'hidden';
+    panelEl.style.transition = 'max-height 220ms ease';
+    // header (small)
+    const header = document.createElement('div');
+    header.className = 'day-dropdown__panel-header';
     header.textContent = calendarDay.toDateString();
-    panel.setAttribute('aria-hidden', 'false');
+    panelEl.appendChild(header);
 
-    // initial placeholder
+    // list
+    const list = document.createElement('ul');
+    list.className = 'day-dropdown__event-list';
+    panelEl.appendChild(list);
+
+    // show all link
+    const showAll = document.createElement('div');
+    showAll.className = 'day-dropdown__show-all-link';
+    showAll.style.display = 'none';
+    showAll.textContent = 'Show all';
+    panelEl.appendChild(showAll);
+
+    // append to wrapper (below the pill)
+    wrapper.appendChild(panelEl);
+
+    // small loading placeholder
     list.innerHTML = '';
     const li = document.createElement('li');
     li.className = 'day-dropdown__empty';
     li.textContent = 'Loading...';
     list.appendChild(li);
-    panel.classList.add('day-dropdown__panel--open');
 
-    // position once with placeholder so it doesn't jump
-    positionPanelBelowOrAbove(panel, toggleBtn);
-
-    animatePanelToContent(panel);
+    // measure and expand
+    requestAnimationFrame(() => {
+      panelEl.classList.add('day-dropdown__panel--open');
+      panelEl.style.maxHeight = '160px'; // open to default small height immediately (will adjust after load)
+    });
 
     if (!loaded) {
-      loading.style.display = 'block';
       try {
         allTransits = await Promise.resolve(getTransitEventsForDate(calendarDay));
         loaded = true;
       } catch (err) {
-        console.error('Error loading transits', err);
+        console.error('Error fetching transits', err);
         allTransits = [];
-      } finally {
-        loading.style.display = 'none';
       }
     }
 
-    // render full list (scrollable)
-    renderIntoList(list, allTransits);
+    // render top 3 only inside pill
+    const toShow = (allTransits || []).slice(0, TOP_IN_PILL);
+    list.innerHTML = '';
+    renderEvents(list, toShow);
 
-    // recompute placement so final height is respected and the panel does not cover pills below
-    positionPanelBelowOrAbove(panel, toggleBtn);
+    // showShowAll if more than TOP_IN_PILL
+    if (allTransits && allTransits.length > TOP_IN_PILL) {
+      showAll.style.display = 'block';
+      showAll.textContent = `Show all (${allTransits.length})`;
+      showAll.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // open right drawer with full list
+        openRightDrawer(calendarDay, allTransits);
+      });
+    } else showAll.style.display = 'none';
 
-    // animate to final height
-    animatePanelToContent(panel);
+    // clamp panel height and enable scroll
+    requestAnimationFrame(() => {
+      panelEl.style.maxHeight = Math.min(panelEl.scrollHeight, 160) + 'px';
+      panelEl.style.overflow = 'auto';
+    });
 
-    activeOverlay = { panel, button: toggleBtn };
+    // store current open
+    currentOpen = { panelEl, toggleBtn, wrapper };
+    toggleBtn.setAttribute('aria-expanded', 'true');
+
+    // click outside behaviour: close when clicking elsewhere
+    setTimeout(() => {
+      const onDocClick = (ev) => {
+        if (!panelEl) return;
+        if (!panelEl.contains(ev.target) && ev.target !== toggleBtn) {
+          closeCurrentInCell();
+          document.removeEventListener('click', onDocClick);
+        }
+      };
+      document.addEventListener('click', onDocClick);
+    }, 0);
   }
 
-  function closeDrawer() { /* kept for parity, no-op here */ }
-
-  // Handlers
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    if (activeOverlay && activeOverlay.button === toggleBtn) closeOverlay(); else openPanel();
+    // toggle
+    if (panelEl && panelEl.parentNode) closeCurrentInCell();
+    else openInCell();
   });
-  // avoid triggering parent create-event flows
+
+  // prevent parent handlers
   toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-
-  // ensure clicks inside panel don't bubble
-  panel.addEventListener('click', (e) => e.stopPropagation());
-  panel.addEventListener('pointerdown', (e) => e.stopPropagation());
-
-  // clicking outside closes overlay
-  document.addEventListener('click', (e) => {
-    if (activeOverlay && activeOverlay.panel && !activeOverlay.panel.contains(e.target) && e.target !== toggleBtn) {
-      closeOverlay();
-    }
-  });
-
-  // Escape to close
-  panel.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeOverlay();
-  });
 }
