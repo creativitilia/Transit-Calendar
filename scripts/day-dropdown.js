@@ -1,5 +1,5 @@
 // Day dropdown with prioritized transit list, filters and smooth animation
-// Fixed: panel becomes scrollable after expand (no freeze on "Show all")
+// Fixes: allow immediate scrolling after open + defer heavy computation so UI stays responsive
 
 import { initStaticEvent } from './event.js';
 import { getTransitEventsForDate, DEFAULT_TOP_N } from './transit-events.js';
@@ -12,7 +12,6 @@ function closeAllPanels() {
     try {
       if (button) button.setAttribute('aria-expanded', 'false');
       if (panel) {
-        // close animation
         panel.style.overflow = 'hidden';
         panel.style.maxHeight = '0px';
         panel.classList.remove('day-dropdown__panel--open');
@@ -24,29 +23,44 @@ function closeAllPanels() {
 }
 
 /**
- * Smoothly set panel height to its content and then enable scrolling.
- * Ensures overflow is hidden during the transition, then restored to auto.
+ * Animate panel to its content height and enable scrolling quickly.
+ * We:
+ *  - hide overflow while adjusting maxHeight to avoid jump
+ *  - set maxHeight to scrollHeight
+ *  - after a small timeout enable overflow:auto so wheel events work immediately
+ *  - as a fallback we also listen for transitionend to ensure overflow is auto
  */
 function animatePanelToContent(panel) {
-  // Ensure we start from overflow hidden so we animate height
-  panel.style.overflow = 'hidden';
+  if (!panel) return;
 
-  // Force reflow then set to scrollHeight in next frames so transition runs
+  // prefer animating max-height
+  panel.style.overflow = 'hidden';
+  // force reflow and set new height in next frame(s)
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      // set to the full content height
       panel.style.maxHeight = panel.scrollHeight + 'px';
-
-      // When transition completes, allow scrolling by setting overflow:auto
-      function onTransitionEnd(e) {
-        if (e.propertyName === 'max-height') {
-          panel.style.overflow = 'auto';
-          panel.removeEventListener('transitionend', onTransitionEnd);
-        }
-      }
-      panel.addEventListener('transitionend', onTransitionEnd);
     });
   });
+
+  // After a short delay (smaller than transition duration) allow scrolling so the user can scroll immediately.
+  // This avoids the first wheel being "lost".
+  const QUICK_ENABLE_MS = 120; // tuned value (transition is 220ms)
+  const enableOverflow = () => {
+    try {
+      panel.style.overflow = 'auto';
+    } catch (e) {}
+  };
+  const quickTimer = setTimeout(enableOverflow, QUICK_ENABLE_MS);
+
+  // As a robust fallback, ensure overflow:auto after transitionend and clear the quick timer
+  function onTransitionEnd(e) {
+    if (e.propertyName === 'max-height') {
+      clearTimeout(quickTimer);
+      enableOverflow();
+      panel.removeEventListener('transitionend', onTransitionEnd);
+    }
+  }
+  panel.addEventListener('transitionend', onTransitionEnd);
 }
 
 export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
@@ -66,6 +80,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   panel.className = 'day-dropdown__panel';
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-hidden', 'true');
+  // start collapsed via max-height
   panel.style.maxHeight = '0px';
   panel.style.overflow = 'hidden';
   panel.style.transition = 'max-height 220ms ease';
@@ -75,7 +90,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   header.textContent = calendarDay.toDateString();
   panel.appendChild(header);
 
-  // Filters
+  // Filters (Planet + Aspect)
   const filterBar = document.createElement('div');
   filterBar.className = 'day-dropdown__filter-bar';
 
@@ -219,6 +234,16 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     });
   }
 
+  // Render a fast preview (topN) first and defer heavy full computation so UI remains responsive
+  function renderFastPreviewAndAnimate() {
+    // Attempt to compute a quick preview from any cached transitFull (if present) or show nothing
+    const preview = (transitFull && transitFull.length) ? transitFull.slice(0, topN) : [];
+    renderListItems(preview);
+    // Animate open and enable scrolling quickly
+    panel.classList.add('day-dropdown__panel--open');
+    animatePanelToContent(panel);
+  }
+
   async function openPanel() {
     closeAllPanels();
 
@@ -228,37 +253,41 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
 
     if (!loaded) {
       loading.style.display = 'block';
-      try {
-        // load transit list (scored)
-        transitFull = await Promise.resolve(getTransitEventsForDate(calendarDay));
+      // We do deferred loading:
+      // 1) Render empty/preview and animate so user sees immediate response
+      renderFastPreviewAndAnimate();
 
-        populateFilterOptions();
-        showingAll = false;
-        applyFiltersAndRender();
-      } catch (err) {
-        list.innerHTML = '';
-        const li = document.createElement('li');
-        li.className = 'day-dropdown__error';
-        li.textContent = 'Error loading events';
-        list.appendChild(li);
-        console.error('Error loading events for day dropdown', err);
-      } finally {
-        loading.style.display = 'none';
-        loaded = true;
-      }
+      // 2) Defer heavy computation to next macrotask so browser can finish animation and process input
+      setTimeout(async () => {
+        try {
+          transitFull = await Promise.resolve(getTransitEventsForDate(calendarDay));
+          populateFilterOptions();
+          showingAll = false;
+          applyFiltersAndRender();
+        } catch (err) {
+          list.innerHTML = '';
+          const li = document.createElement('li');
+          li.className = 'day-dropdown__error';
+          li.textContent = 'Error loading events';
+          list.appendChild(li);
+          console.error('Error loading events for day dropdown', err);
+        } finally {
+          loading.style.display = 'none';
+          loaded = true;
+          // Animate to final content height after list update (also enables scrolling)
+          animatePanelToContent(panel);
+        }
+      }, 60); // small delay to yield to the browser (60ms)
     } else {
       applyFiltersAndRender();
+      animatePanelToContent(panel);
     }
 
-    // animate open and then enable scroll
-    panel.classList.add('day-dropdown__panel--open');
-    animatePanelToContent(panel);
     panel.setAttribute('aria-hidden', 'false');
   }
 
   function closePanel() {
     toggleBtn.setAttribute('aria-expanded', 'false');
-    // close with animation and disable scrolling immediately
     panel.style.overflow = 'hidden';
     panel.style.maxHeight = '0px';
     panel.classList.remove('day-dropdown__panel--open');
@@ -312,7 +341,6 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   showAllLink.addEventListener('click', () => {
     showingAll = !showingAll;
     applyFiltersAndRender();
-    // animate to new height (disable scroll during resize)
     panel.style.overflow = 'hidden';
     panel.style.maxHeight = panel.scrollHeight + 'px';
     animatePanelToContent(panel);
