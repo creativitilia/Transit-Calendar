@@ -19,13 +19,11 @@
   font-weight: 500;
 }
 
-/* keep wrapper but allow grid to grow/shrink */
+/* allow grid to grow/shrink; rows auto-size so a row expands only when content grows */
 .month-calendar__day-list-wrapper{
   position: relative;
 }
 
-/* Use a grid with auto rows so each week row can grow independently.
-   Add small gaps to keep pills compact when closed. */
 .month-calendar__day-list {
   list-style-type: none;
   position: relative;
@@ -36,18 +34,9 @@
   padding: 12px 8px;
 }
 
-/* Four/Five/Six week rows use auto so rows grow to content height */
-.month-calendar--four-week .month-calendar__day-list {
-  grid-template-rows: repeat(4, auto);
-}
-
-.month-calendar--five-week .month-calendar__day-list {
-  grid-template-rows: repeat(5, auto);
-}
-
-.month-calendar--six-week .month-calendar__day-list {
-  grid-template-rows: repeat(6, auto);
-}
+.month-calendar--four-week .month-calendar__day-list { grid-template-rows: repeat(4, auto); }
+.month-calendar--five-week .month-calendar__day-list { grid-template-rows: repeat(5, auto); }
+.month-calendar--six-week .month-calendar__day-list { grid-template-rows: repeat(6, auto); }
 
 .month-calendar__day {
   border: 0;
@@ -57,28 +46,10 @@
   position: relative;
   align-items: center;
   justify-content: flex-start;
-  min-height: 48px; /* give minimum row height for compact pills */
+  min-height: 48px;
 }
 
-.month-calendar__day--highlight {
-  background-color: var(--color-blue-50);
-}
-
-.month-calendar__day:nth-child(7n) {
-  border-right: 0;
-}
-
-.month-calendar--four-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
-
-.month-calendar--five-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
-
-.month-calendar--six-week .month-calendar__day:nth-last-child(-n+7) {
-  border-bottom: 0;
-}
+.month-calendar__day--highlight { background-color: var(--color-blue-50); }
 
 .month-calendar__day-label {
   width: 100%;
@@ -98,4 +69,3 @@
   align-items: flex-start;
   justify-content: center;
 }
-

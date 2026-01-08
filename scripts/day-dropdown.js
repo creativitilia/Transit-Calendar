@@ -1,142 +1,52 @@
-// Day dropdown: absolute overlay panel + "All aspects" right-side drawer.
-// - Click pill to open overlay (small prioritized list).
-// - Click "Show all" to open the right-side drawer showing the full list with same filters.
+// Day dropdown that inserts a full-width panel-row after the week row
+// - Panel-row spans entire calendar width (grid column 1 / -1), pushes rows down.
+// - Per-day panels show the prioritized top-N transit aspects and a "Show all" link.
+// - Filters removed from per-day panels; the right-side drawer still contains filters.
 
 import { initStaticEvent } from './event.js';
 import { getTransitEventsForDate, DEFAULT_TOP_N } from './transit-events.js';
 
-const openPanels = new Set();
-let openAllDrawer = null; // reference to currently open right drawer (only one allowed)
+let activePanelRow = null; // the currently-open panel-row element
+let openAllDrawer = null;  // the right-side drawer (if opened)
 
-/* Utility to close any open pill overlay panels */
-function closeAllPanels() {
-  for (const info of Array.from(openPanels)) {
-    try {
-      const { button, panel } = info;
-      if (button) button.setAttribute('aria-expanded', 'false');
-      if (panel) {
-        panel.style.maxHeight = '0px';
-        panel.classList.remove('day-dropdown__panel--open');
-        panel.style.visibility = 'hidden';
-      }
-    } catch (e) {}
-    openPanels.delete(info);
+// Close any existing panel-row
+function closeActivePanelRow() {
+  if (activePanelRow && activePanelRow.parentNode) {
+    activePanelRow.parentNode.removeChild(activePanelRow);
+    activePanelRow = null;
   }
 }
 
-/* Animate panel to content; enable quick scrolling */
-function animatePanelToContent(panel) {
-  if (!panel) return;
-  panel.style.overflow = 'hidden';
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      panel.style.maxHeight = panel.scrollHeight + 'px';
-    });
-  });
-  const QUICK_ENABLE_MS = 120;
-  const quickTimer = setTimeout(() => {
-    panel.style.overflow = 'auto';
-  }, QUICK_ENABLE_MS);
-  const onTransition = (e) => {
-    if (e.propertyName === 'max-height') {
-      clearTimeout(quickTimer);
-      panel.style.overflow = 'auto';
-      panel.removeEventListener('transitionend', onTransition);
-    }
-  };
-  panel.addEventListener('transitionend', onTransition);
+// Close right drawer if open
+function closeAllDrawers() {
+  if (!openAllDrawer) return;
+  const { drawer } = openAllDrawer;
+  try { drawer.parentNode.removeChild(drawer); } catch (e) {}
+  openAllDrawer = null;
+  document.removeEventListener('click', onDocClickForDrawer);
 }
 
-/* Create overlay panel structure (attached to body) */
-function createOverlayPanelStructure() {
-  const panel = document.createElement('div');
-  panel.className = 'day-dropdown__panel overlay';
-  panel.setAttribute('role', 'region');
-  panel.setAttribute('aria-hidden', 'true');
-  panel.style.visibility = 'hidden';
-  panel.style.maxHeight = '0px';
-  panel.style.overflow = 'hidden';
-  panel.style.transition = 'max-height 220ms ease, width 120ms ease';
-  panel.style.zIndex = 1400;
-
-  const header = document.createElement('div');
-  header.className = 'day-dropdown__panel-header';
-  panel.appendChild(header);
-
-  const filterBar = document.createElement('div');
-  filterBar.className = 'day-dropdown__filter-bar';
-
-  const planetWrapper = document.createElement('div');
-  planetWrapper.className = 'day-dropdown__filter-wrapper';
-  const planetLabel = document.createElement('div');
-  planetLabel.className = 'day-dropdown__filter-label';
-  planetLabel.textContent = 'Planet';
-  const transitSelect = document.createElement('select');
-  transitSelect.className = 'day-dropdown__filter';
-  planetWrapper.appendChild(planetLabel);
-  planetWrapper.appendChild(transitSelect);
-
-  const aspectWrapper = document.createElement('div');
-  aspectWrapper.className = 'day-dropdown__filter-wrapper';
-  const aspectLabel = document.createElement('div');
-  aspectLabel.className = 'day-dropdown__filter-label';
-  aspectLabel.textContent = 'Aspect';
-  const aspectSelect = document.createElement('select');
-  aspectSelect.className = 'day-dropdown__filter';
-  aspectWrapper.appendChild(aspectLabel);
-  aspectWrapper.appendChild(aspectSelect);
-
-  const controls = document.createElement('div');
-  controls.className = 'day-dropdown__controls-small';
-  const clearBtn = document.createElement('button');
-  clearBtn.type = 'button';
-  clearBtn.className = 'day-dropdown__clear-filters';
-  clearBtn.textContent = 'Clear';
-  controls.appendChild(clearBtn);
-
-  filterBar.appendChild(planetWrapper);
-  filterBar.appendChild(aspectWrapper);
-  filterBar.appendChild(controls);
-  panel.appendChild(filterBar);
-
-  const list = document.createElement('ul');
-  list.className = 'day-dropdown__event-list';
-  panel.appendChild(list);
-
-  const showAllLink = document.createElement('div');
-  showAllLink.className = 'day-dropdown__show-all-link';
-  showAllLink.style.display = 'none';
-  showAllLink.textContent = 'Show all';
-  panel.appendChild(showAllLink);
-
-  const loading = document.createElement('div');
-  loading.className = 'day-dropdown__loading';
-  loading.textContent = 'Loading...';
-  loading.style.display = 'none';
-  panel.appendChild(loading);
-
-  document.body.appendChild(panel);
-  return { panel, header, list, transitSelect, aspectSelect, showAllLink, loading, clearBtn };
+function onDocClickForDrawer(e) {
+  if (!openAllDrawer) return;
+  const { drawer } = openAllDrawer;
+  if (!drawer.contains(e.target)) closeAllDrawers();
 }
 
-/* Create right-side drawer structure (full list) */
+// Create the right-side drawer (full aspects with filters)
 function createAllDrawerStructure() {
   const drawer = document.createElement('div');
   drawer.className = 'day-dropdown__all-drawer';
   drawer.setAttribute('role', 'dialog');
   drawer.setAttribute('aria-modal', 'true');
-  drawer.style.zIndex = 1500;
 
   const inner = document.createElement('div');
   inner.className = 'day-dropdown__all-drawer-inner';
 
   const header = document.createElement('div');
   header.className = 'day-dropdown__all-drawer-header';
-
   const title = document.createElement('div');
   title.className = 'day-dropdown__all-drawer-title';
   title.textContent = 'All aspects';
-
   const closeBtn = document.createElement('button');
   closeBtn.className = 'day-dropdown__all-drawer-close';
   closeBtn.type = 'button';
@@ -144,7 +54,6 @@ function createAllDrawerStructure() {
   header.appendChild(title);
   header.appendChild(closeBtn);
 
-  // Filters area (reuse same small UI)
   const filterBar = document.createElement('div');
   filterBar.className = 'day-dropdown__filter-bar day-dropdown__filter-bar--drawer';
 
@@ -187,64 +96,44 @@ function createAllDrawerStructure() {
   inner.appendChild(filterBar);
   inner.appendChild(list);
   drawer.appendChild(inner);
-
   document.body.appendChild(drawer);
+
   return { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
 }
 
-/* Position overlay next to pill; prefer right if space */
-function positionOverlayPanel(buttonEl, panelEl, desiredWidth = 360, desiredMaxHeight = 420) {
-  const calendarList = document.querySelector('.month-calendar__day-list') || document.querySelector('.month-calendar');
-  const calendarRect = calendarList ? calendarList.getBoundingClientRect() : { left: 0, right: window.innerWidth, top: 0, bottom: window.innerHeight };
-  const btnRect = buttonEl.getBoundingClientRect();
-  const margin = 12;
-  const availableRight = Math.max(0, calendarRect.right - btnRect.right - margin);
-  const availableLeft = Math.max(0, btnRect.left - calendarRect.left - margin);
-
-  let width = Math.min(desiredWidth, window.innerWidth - 2 * margin);
-  let placeRight = true;
-  if (availableRight >= desiredWidth) {
-    placeRight = true;
-    width = Math.min(desiredWidth, availableRight);
-  } else if (availableLeft >= desiredWidth) {
-    placeRight = false;
-    width = Math.min(desiredWidth, availableLeft);
-  } else {
-    if (availableRight >= availableLeft) {
-      placeRight = true;
-      width = Math.max(Math.min(availableRight, width), 180);
-    } else {
-      placeRight = false;
-      width = Math.max(Math.min(availableLeft, width), 180);
-    }
+// Helper to render event items into a given UL element
+function renderEventsIntoList(listEl, events) {
+  listEl.innerHTML = '';
+  if (!events || events.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'day-dropdown__empty';
+    li.textContent = 'No transit aspects';
+    listEl.appendChild(li);
+    return;
   }
-
-  const topMargin = 12;
-  const top = Math.max(calendarRect.top + topMargin, btnRect.top - 8);
-  const bottomLimit = Math.min(window.innerHeight - margin, calendarRect.bottom - margin);
-  let maxHeight = Math.max(80, bottomLimit - top);
-  maxHeight = Math.min(maxHeight, desiredMaxHeight);
-
-  panelEl.style.position = 'fixed';
-  panelEl.style.width = width + 'px';
-  panelEl.style.maxHeight = '0px';
-  panelEl.style.height = 'auto';
-  panelEl.style.left = placeRight ? (btnRect.right + margin) + 'px' : 'auto';
-  panelEl.style.right = placeRight ? 'auto' : (window.innerWidth - btnRect.left + margin) + 'px';
-  panelEl.style.top = top + 'px';
-  panelEl.dataset.desiredMaxHeight = String(maxHeight);
-  panelEl.style.visibility = 'visible';
+  for (const ev of events) {
+    const li = document.createElement('li');
+    li.className = 'day-dropdown__event-list-item';
+    initStaticEvent(li, ev);
+    listEl.appendChild(li);
+  }
 }
 
-/* attachDayDropdown: main entrypoint (used by month-calendar.js) */
+/**
+ * Main exported function
+ * calendarDayElement: <li class="month-calendar__day"> for that date
+ * calendarDay: Date object for that cell
+ * eventStore: used previously (kept for parity)
+ */
 export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   const wrapper = calendarDayElement.querySelector('[data-month-calendar-event-list-wrapper]');
   if (!wrapper) return;
 
+  // Remove any default event list inside cell
   const defaultEventList = wrapper.querySelector('[data-event-list]');
   if (defaultEventList) defaultEventList.remove();
 
-  // pill in-cell
+  // Create pill button and append into wrapper
   const toggleBtn = document.createElement('button');
   toggleBtn.type = 'button';
   toggleBtn.className = 'day-dropdown__button';
@@ -252,336 +141,258 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   toggleBtn.setAttribute('aria-expanded', 'false');
   wrapper.appendChild(toggleBtn);
 
-  // overlay components
-  const { panel, header, list, transitSelect, aspectSelect, showAllLink, loading, clearBtn } = createOverlayPanelStructure();
-
-  // drawer will be created when needed (not per-pill)
-  let drawerRef = null;
-
-  let loaded = false;
+  // Panel row state (will be created on open)
+  let panelRow = null;
+  let panelList = null;
+  let panelHeader = null;
+  let panelShowAllLink = null;
   let transitFull = [];
-  let transitFiltered = [];
-  let showingAll = false;
+  let loaded = false;
   const topN = DEFAULT_TOP_N;
 
-  function renderListItems(eventsToShow) {
-    list.innerHTML = '';
-    if (!eventsToShow || eventsToShow.length === 0) {
-      const li = document.createElement('li');
-      li.className = 'day-dropdown__empty';
-      li.textContent = 'No transit aspects';
-      list.appendChild(li);
-      return;
-    }
-    for (const ev of eventsToShow) {
-      const li = document.createElement('li');
-      li.className = 'day-dropdown__event-list-item';
-      initStaticEvent(li, ev);
-      list.appendChild(li);
+  // Create & insert panel-row after the week row of this day
+  function insertPanelRow() {
+    // locate month grid list and find index
+    const dayList = document.querySelector('.month-calendar__day-list');
+    const cells = Array.from(dayList.querySelectorAll('.month-calendar__day'));
+    const idx = cells.indexOf(calendarDayElement);
+    if (idx === -1) return;
+
+    const row = Math.floor(idx / 7);
+    const insertIndex = (row + 1) * 7; // place panel-row after that week
+
+    // Create the panel-row (li) that spans full grid width
+    panelRow = document.createElement('li');
+    panelRow.className = 'month-calendar__panel-row';
+    panelRow.style.gridColumn = '1 / -1';
+
+    // create inner panel container (visual card)
+    const panel = document.createElement('div');
+    panel.className = 'day-dropdown__panel panel-row';
+    // header
+    panelHeader = document.createElement('div');
+    panelHeader.className = 'day-dropdown__panel-header';
+    panelHeader.textContent = calendarDay.toDateString();
+    panel.appendChild(panelHeader);
+
+    // list (where events will be rendered)
+    panelList = document.createElement('ul');
+    panelList.className = 'day-dropdown__event-list';
+    panel.appendChild(panelList);
+
+    // show all link
+    panelShowAllLink = document.createElement('div');
+    panelShowAllLink.className = 'day-dropdown__show-all-link';
+    panelShowAllLink.style.display = 'none';
+    panelShowAllLink.textContent = 'Show all';
+    panel.appendChild(panelShowAllLink);
+
+    panelRow.appendChild(panel);
+
+    const dayListChildren = dayList.children;
+    if (insertIndex >= dayListChildren.length) dayList.appendChild(panelRow);
+    else dayList.insertBefore(panelRow, dayListChildren[insertIndex]);
+  }
+
+  function removePanelRow() {
+    if (panelRow && panelRow.parentNode) {
+      panelRow.parentNode.removeChild(panelRow);
+      panelRow = null;
+      panelList = null;
+      panelHeader = null;
+      panelShowAllLink = null;
     }
   }
 
-  function applyFiltersAndRender() {
-    const tVal = transitSelect.value;
-    const aVal = aspectSelect.value;
-
-    transitFiltered = transitFull.filter(ev => {
-      const meta = ev.meta || {};
-      if (tVal && tVal !== 'all' && meta.transitPlanet !== tVal) return false;
-      if (aVal && aVal !== 'all' && meta.aspect !== aVal) return false;
-      return true;
+  // animate in-flow panel: open/close using max-height
+  function animatePanelOpen() {
+    if (!panelRow) return;
+    const panel = panelRow.querySelector('.day-dropdown__panel.panel-row');
+    if (!panel) return;
+    panel.style.maxHeight = '0px';
+    panel.style.overflow = 'hidden';
+    // Wait a frame then set to scrollHeight so CSS transitions run
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        panel.style.maxHeight = Math.min(panel.scrollHeight, 520) + 'px';
+      });
     });
-
-    const toShow = showingAll ? transitFiltered : transitFiltered.slice(0, topN);
-    renderListItems(toShow);
-
-    if (transitFiltered.length <= topN) {
-      showAllLink.style.display = 'none';
-    } else {
-      showAllLink.style.display = 'block';
-      showAllLink.textContent = showingAll ? `Show top ${topN}` : `Show all (${transitFiltered.length})`;
-    }
+    // enable scrolling after a short delay
+    setTimeout(() => { panel.style.overflow = 'auto'; }, 140);
   }
 
-  function populateFilterOptions() {
-    const transitSet = new Set();
-    const aspectMap = new Map();
-
-    for (const ev of transitFull) {
-      const m = ev.meta || {};
-      if (m.transitPlanet) transitSet.add(m.transitPlanet);
-      if (m.aspect) aspectMap.set(m.aspect, m.symbol || m.aspect);
-    }
-
-    transitSelect.innerHTML = '';
-    const allOpt = document.createElement('option');
-    allOpt.value = 'all';
-    allOpt.textContent = 'All';
-    transitSelect.appendChild(allOpt);
-    Array.from(transitSet).sort().forEach(val => {
-      const o = document.createElement('option');
-      o.value = val;
-      o.textContent = val[0].toUpperCase() + val.slice(1);
-      transitSelect.appendChild(o);
-    });
-
-    aspectSelect.innerHTML = '';
-    const allA = document.createElement('option');
-    allA.value = 'all';
-    allA.textContent = 'All';
-    aspectSelect.appendChild(allA);
-    Array.from(aspectMap.keys()).sort().forEach(name => {
-      const o = document.createElement('option');
-      o.value = name;
-      const sym = aspectMap.get(name) || '';
-      o.textContent = `${sym} ${name}`;
-      aspectSelect.appendChild(o);
-    });
+  function animatePanelClose() {
+    if (!panelRow) return;
+    const panel = panelRow.querySelector('.day-dropdown__panel.panel-row');
+    if (!panel) return;
+    panel.style.overflow = 'hidden';
+    panel.style.maxHeight = '0px';
   }
 
-  function renderFastPreviewAndAnimate() {
-    const preview = (transitFull && transitFull.length) ? transitFull.slice(0, topN) : [];
-    list.innerHTML = '';
-    if (!preview || preview.length === 0) {
-      const li = document.createElement('li');
-      li.className = 'day-dropdown__empty';
-      li.textContent = 'Loading...';
-      list.appendChild(li);
-    } else {
-      for (const ev of preview) {
-        const li = document.createElement('li');
-        li.className = 'day-dropdown__event-list-item';
-        initStaticEvent(li, ev);
-        list.appendChild(li);
-      }
+  // apply simple rendering: topN preview or all (no filters here)
+  function renderPanelContent() {
+    if (!panelList) return;
+    const toShow = transitFull ? transitFull.slice(0, topN) : [];
+    renderEventsIntoList(panelList, toShow);
+    if (!transitFull || transitFull.length <= topN) panelShowAllLink.style.display = 'none';
+    else {
+      panelShowAllLink.style.display = 'block';
+      panelShowAllLink.textContent = `Show all (${transitFull.length})`;
     }
-    panel.classList.add('day-dropdown__panel--open');
   }
 
   async function openPanel() {
-    closeAllPanels();
+    // close other panels/drawers first
+    closeActivePanelRow();
+    closeAllDrawers();
+
     toggleBtn.setAttribute('aria-expanded', 'true');
-    header.textContent = calendarDay.toDateString();
-    panel.setAttribute('aria-hidden', 'false');
+    insertPanelRow();
 
-    positionOverlayPanel(toggleBtn, panel);
+    // show preview immediately
+    if (panelList) {
+      // quick preview (empty while loading)
+      panelList.innerHTML = '';
+      const li = document.createElement('li');
+      li.className = 'day-dropdown__empty';
+      li.textContent = 'Loading...';
+      panelList.appendChild(li);
+    }
 
-    renderFastPreviewAndAnimate();
-    animatePanelToContent(panel);
+    animatePanelOpen();
 
-    // Defer heavy compute
+    // fetch transits (defer slightly)
     setTimeout(async () => {
       try {
         transitFull = await Promise.resolve(getTransitEventsForDate(calendarDay));
-        populateFilterOptions();
-        showingAll = false;
-        applyFiltersAndRender();
+        loaded = true;
+        // render the top items
+        renderPanelContent();
+        // ensure panel height fits up to a limit
+        const panel = panelRow.querySelector('.day-dropdown__panel.panel-row');
+        if (panel) {
+          const maxH = 520;
+          if (panel.scrollHeight > maxH) {
+            panel.style.maxHeight = maxH + 'px';
+            panel.style.overflow = 'auto';
+          } else {
+            panel.style.maxHeight = panel.scrollHeight + 'px';
+            panel.style.overflow = 'auto';
+          }
+        }
       } catch (err) {
-        list.innerHTML = '';
+        panelList.innerHTML = '';
         const li = document.createElement('li');
         li.className = 'day-dropdown__error';
         li.textContent = 'Error loading events';
-        list.appendChild(li);
-        console.error('Error loading events for day dropdown', err);
-      } finally {
-        loaded = true;
-        // clamp max height to available space if dataset set
-        const maxH = parseInt(panel.dataset.desiredMaxHeight || '420', 10);
-        if (panel.scrollHeight > maxH) {
-          panel.style.maxHeight = maxH + 'px';
-          panel.style.overflow = 'auto';
-        } else {
-          panel.style.maxHeight = panel.scrollHeight + 'px';
-          panel.style.overflow = 'auto';
-        }
-        openPanels.add({ button: toggleBtn, panel });
+        panelList.appendChild(li);
+        console.error(err);
       }
     }, 40);
   }
 
   function closePanel() {
     toggleBtn.setAttribute('aria-expanded', 'false');
-    panel.style.overflow = 'hidden';
-    panel.style.maxHeight = '0px';
-    panel.classList.remove('day-dropdown__panel--open');
-    panel.style.visibility = 'hidden';
-    panel.setAttribute('aria-hidden', 'true');
-    for (const info of Array.from(openPanels)) {
-      if (info.panel === panel) openPanels.delete(info);
+    if (panelRow) {
+      animatePanelClose();
+      // remove after transition time
+      setTimeout(removePanelRow, 250);
     }
   }
 
-  // Open right-side drawer showing full list (with filters) when user clicks "Show all"
+  // RIGHT-DRAWER (Show all behavior)
   function openAllDrawerForDay() {
-    // if drawer already open, close it first
-    if (openAllDrawer) {
-      closeAllDrawers();
-    }
+    // ensure transits loaded
+    const ensure = loaded ? Promise.resolve(transitFull) : getTransitEventsForDate(calendarDay).then(r => { transitFull = r || []; loaded = true; return transitFull; });
 
-    const { drawer, closeBtn, transitSelect: pSelect, aspectSelect: aSelect, clearBtn, list: allList, title } = createAllDrawerStructure();
-    openAllDrawer = { drawer, closeBtn, pSelect, aSelect, clearBtn, allList, title };
+    ensure.then(() => {
+      // create drawer
+      const { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title } = createAllDrawerStructure();
+      openAllDrawer = { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
 
-    title.textContent = `All aspects — ${calendarDay.toDateString()}`;
+      title.textContent = `All aspects — ${calendarDay.toDateString()}`;
 
-    // populate filters in drawer from transitFull
-    const transitSet = new Set();
-    const aspectMap = new Map();
-    for (const ev of transitFull) {
-      const m = ev.meta || {};
-      if (m.transitPlanet) transitSet.add(m.transitPlanet);
-      if (m.aspect) aspectMap.set(m.aspect, m.symbol || m.aspect);
-    }
-
-    // fill selects
-    pSelect.innerHTML = '';
-    const allP = document.createElement('option'); allP.value = 'all'; allP.textContent = 'All'; pSelect.appendChild(allP);
-    Array.from(transitSet).sort().forEach(val => {
-      const o = document.createElement('option'); o.value = val; o.textContent = val[0].toUpperCase()+val.slice(1); pSelect.appendChild(o);
-    });
-
-    aSelect.innerHTML = '';
-    const allA = document.createElement('option'); allA.value = 'all'; allA.textContent = 'All'; aSelect.appendChild(allA);
-    Array.from(aspectMap.keys()).sort().forEach(name => {
-      const o = document.createElement('option'); o.value = name; o.textContent = `${aspectMap.get(name) || ''} ${name}`; aSelect.appendChild(o);
-    });
-
-    // set selects initial values to mirror overlay selects if present
-    try { pSelect.value = transitSelect.value || 'all'; } catch(e){}
-    try { aSelect.value = aspectSelect.value || 'all'; } catch(e){}
-
-    // function to apply drawer filters and render complete list
-    function applyDrawerFiltersAndRender() {
-      const tVal = pSelect.value;
-      const aVal = aSelect.value;
-      const filtered = transitFull.filter(ev => {
+      // populate selects
+      const transitSet = new Set();
+      const aspectMap = new Map();
+      for (const ev of transitFull) {
         const m = ev.meta || {};
-        if (tVal && tVal !== 'all' && m.transitPlanet !== tVal) return false;
-        if (aVal && aVal !== 'all' && m.aspect !== aVal) return false;
-        return true;
+        if (m.transitPlanet) transitSet.add(m.transitPlanet);
+        if (m.aspect) aspectMap.set(m.aspect, m.symbol || m.aspect);
+      }
+
+      transitSelect.innerHTML = '';
+      const allOpt = document.createElement('option'); allOpt.value = 'all'; allOpt.textContent = 'All'; transitSelect.appendChild(allOpt);
+      Array.from(transitSet).sort().forEach(val => {
+        const o = document.createElement('option'); o.value = val; o.textContent = val[0].toUpperCase()+val.slice(1); transitSelect.appendChild(o);
       });
-      // render all filtered items (full list)
-      allList.innerHTML = '';
-      if (!filtered || filtered.length === 0) {
-        const li = document.createElement('li'); li.className = 'day-dropdown__empty'; li.textContent = 'No transit aspects'; allList.appendChild(li);
-      } else {
-        for (const ev of filtered) {
-          const li = document.createElement('li'); li.className = 'day-dropdown__event-list-item'; initStaticEvent(li, ev); allList.appendChild(li);
-        }
+
+      aspectSelect.innerHTML = '';
+      const allA = document.createElement('option'); allA.value = 'all'; allA.textContent = 'All'; aspectSelect.appendChild(allA);
+      Array.from(aspectMap.keys()).sort().forEach(name => {
+        const o = document.createElement('option'); o.value = name; o.textContent = `${aspectMap.get(name) || ''} ${name}`; aspectSelect.appendChild(o);
+      });
+
+      // render initial full list
+      renderDrawerList(list, transitFull, transitSelect.value, aspectSelect.value);
+
+      // handlers
+      closeBtn.addEventListener('click', closeAllDrawers);
+      transitSelect.addEventListener('change', () => renderDrawerList(list, transitFull, transitSelect.value, aspectSelect.value));
+      aspectSelect.addEventListener('change', () => renderDrawerList(list, transitFull, transitSelect.value, aspectSelect.value));
+      clearBtn.addEventListener('click', () => {
+        transitSelect.value = 'all'; aspectSelect.value = 'all';
+        renderDrawerList(list, transitFull, 'all', 'all');
+      });
+
+      // click outside closes drawer
+      setTimeout(() => document.addEventListener('click', onDocClickForDrawer), 0);
+    }).catch(err => console.error(err));
+  }
+
+  function renderDrawerList(listEl, allEvents, transitVal, aspectVal) {
+    const filtered = (allEvents || []).filter(ev => {
+      const m = ev.meta || {};
+      if (transitVal && transitVal !== 'all' && m.transitPlanet !== transitVal) return false;
+      if (aspectVal && aspectVal !== 'all' && m.aspect !== aspectVal) return false;
+      return true;
+    });
+    listEl.innerHTML = '';
+    if (!filtered.length) {
+      const li = document.createElement('li'); li.className = 'day-dropdown__empty'; li.textContent = 'No transit aspects'; listEl.appendChild(li);
+    } else {
+      for (const ev of filtered) {
+        const li = document.createElement('li'); li.className = 'day-dropdown__event-list-item'; initStaticEvent(li, ev); listEl.appendChild(li);
       }
     }
-
-    // initial render
-    applyDrawerFiltersAndRender();
-
-    // show drawer by adding class
-    drawer.classList.add('day-dropdown__all-drawer--open');
-
-    // event handlers
-    closeBtn.addEventListener('click', closeAllDrawers);
-    pSelect.addEventListener('change', () => {
-      // mirror selection back to overlay transitSelect
-      try { transitSelect.value = pSelect.value; } catch(e){}
-      applyDrawerFiltersAndRender();
-    });
-    aSelect.addEventListener('change', () => {
-      try { aspectSelect.value = aSelect.value; } catch(e){}
-      applyDrawerFiltersAndRender();
-    });
-    clearBtn.addEventListener('click', () => {
-      pSelect.value = 'all'; aSelect.value = 'all';
-      try { transitSelect.value = 'all'; aspectSelect.value = 'all'; } catch(e){}
-      applyDrawerFiltersAndRender();
-    });
-
-    // ESC to close
-    drawer.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') closeAllDrawers();
-    });
-
-    // Add overlay close when clicking outside drawer area
-    setTimeout(() => {
-      document.addEventListener('click', handleDocClickForDrawer);
-    }, 0);
   }
 
-  function handleDocClickForDrawer(e) {
-    if (!openAllDrawer) return;
-    const { drawer } = openAllDrawer;
-    if (!drawer.contains(e.target)) {
-      closeAllDrawers();
-    }
-  }
-
-  function closeAllDrawers() {
-    if (!openAllDrawer) return;
-    const { drawer } = openAllDrawer;
-    try {
-      drawer.parentNode.removeChild(drawer);
-    } catch (e){}
-    openAllDrawer = null;
-    document.removeEventListener('click', handleDocClickForDrawer);
-  }
-
-  // handlers for overlay
+  // handlers for pill and panel
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
-    if (isOpen) closePanel();
-    else openPanel();
+    if (isOpen) closePanel(); else openPanel();
   });
   toggleBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-  panel.addEventListener('click', (e) => e.stopPropagation());
-  panel.addEventListener('pointerdown', (e) => e.stopPropagation());
 
-  document.addEventListener('click', (event) => {
-    if (panel && !panel.contains(event.target) && event.target !== toggleBtn) {
-      if (panel.classList.contains('day-dropdown__panel--open')) closePanel();
+  // clicking the in-cell panel should not bubble up
+  document.addEventListener('click', (e) => {
+    // if clicked outside the active panel-row, close it
+    if (!panelRow) return;
+    if (!panelRow.contains(e.target) && e.target !== toggleBtn) {
+      closePanel();
     }
   });
 
-  transitSelect.addEventListener('change', () => {
-    showingAll = false;
-    applyFiltersAndRender();
-    animatePanelToContent(panel);
-  });
-  aspectSelect.addEventListener('change', () => {
-    showingAll = false;
-    applyFiltersAndRender();
-    animatePanelToContent(panel);
-  });
-
-  // Show all now opens the right-side drawer (not toggling inline)
-  showAllLink.addEventListener('click', () => {
-    // ensure transitFull is available (if not, compute quickly)
-    if (!loaded) {
-      // compute then open drawer
-      loading.style.display = 'block';
-      getTransitEventsForDate(calendarDay).then((res) => {
-        transitFull = res || [];
-        loading.style.display = 'none';
-        loaded = true;
-        populateFilterOptions();
-        applyFiltersAndRender();
+  // attach showAll handler will be set per-panel row after it exists
+  // Because panelRow is created dynamically, delegate a short interval to attach handler after insertion
+  const showAllAttachInterval = setInterval(() => {
+    if (panelShowAllLink) {
+      panelShowAllLink.addEventListener('click', (ev) => {
+        ev.stopPropagation();
         openAllDrawerForDay();
-      }).catch((err) => {
-        loading.style.display = 'none';
-        console.error(err);
       });
-    } else {
-      openAllDrawerForDay();
+      clearInterval(showAllAttachInterval);
     }
-  });
-
-  clearBtn.addEventListener('click', () => {
-    transitSelect.value = 'all';
-    aspectSelect.value = 'all';
-    showingAll = false;
-    applyFiltersAndRender();
-    animatePanelToContent(panel);
-  });
-
-  // keyboard escape for overlay panel
-  panel.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closePanel();
-  });
+  }, 80);
 }

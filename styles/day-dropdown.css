@@ -1,167 +1,72 @@
-/* Day dropdown overlay styles + right-side "All aspects" drawer */
-
-/* Host cell tweaks */
-.month-calendar__day {
-  border: 0;
-  position: relative;
+.month-calendar {
   display: flex;
   flex-direction: column;
-  padding: 6px 6px;
-  background: transparent;
+  height: 100%;
 }
+
+.month-calendar__day-of-week-list {
+  list-style-type: none;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid var(--color-gray-300);
+  padding: 0.75rem 0;
+}
+
+.month-calendar__day-of-week {
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-md);
+  text-align: center;
+  font-weight: 500;
+}
+
+/* allow grid to grow/shrink; rows auto-size so a row expands only when content grows */
+.month-calendar__day-list-wrapper{
+  position: relative;
+}
+
+.month-calendar__day-list {
+  list-style-type: none;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  grid-column-gap: 12px;
+  grid-row-gap: 12px;
+  padding: 12px 8px;
+}
+
+/* Four/Five/Six week rows */
+.month-calendar--four-week .month-calendar__day-list { grid-template-rows: repeat(4, auto); }
+.month-calendar--five-week .month-calendar__day-list { grid-template-rows: repeat(5, auto); }
+.month-calendar--six-week .month-calendar__day-list { grid-template-rows: repeat(6, auto); }
+
+.month-calendar__day {
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px;
+  position: relative;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 48px;
+}
+
+.month-calendar__day--highlight { background-color: var(--color-blue-50); }
 
 .month-calendar__day-label {
-  display: none !important;
+  width: 100%;
+  padding: 0.5rem 0;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--color-text-dark);
 }
 
+/* Event wrapper becomes the area where the pill is centered */
 .month-calendar__event-list-wrapper {
+  flex-grow: 1;
+  padding-bottom: 1.5rem;
+  width: 100%;
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
-/* Pill */
-.day-dropdown__button {
-  display: inline-block;
-  padding: 8px 24px;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--color-text-dark);
-  border: 1px solid rgba(0,0,0,0.12);
-  cursor: pointer;
-  font-size: 14px;
-  margin: 8px 0;
-  width: calc(100% - 32px);
-  max-width: 260px;
-  text-align: center;
-  transition: box-shadow 120ms ease;
-}
-.day-dropdown__button:hover {
-  background: rgba(0,0,0,0.03);
-}
-
-/* Overlay panel (attached to body) */
-.day-dropdown__panel {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 360px;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 220ms ease, width 120ms ease;
-  background: #fff;
-  border: 1px solid rgba(0,0,0,0.08);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-  padding: 0;
-  box-sizing: border-box;
-  z-index: 1400;
-  visibility: hidden;
-}
-
-/* Panel header */
-.day-dropdown__panel-header {
-  padding: 8px 12px;
-  font-weight: 600;
-  font-size: 13px;
-  border-bottom: 1px solid #eef2f7;
-}
-
-/* Filters */
-.day-dropdown__filter-bar {
-  display: flex;
-  gap: 8px;
-  padding: 8px;
-  align-items: center;
-  justify-content: flex-start;
-  border-bottom: 1px solid #f3f4f6;
-  flex-wrap: wrap;
-}
-.day-dropdown__filter-wrapper { display:flex; flex-direction:column; gap:4px; min-width:84px; }
-.day-dropdown__filter-label { font-size:11px; color:#374151; font-weight:600; }
-.day-dropdown__filter { padding:6px 8px; font-size:12px; border-radius:6px; border:1px solid #e5e7eb; background:#fff; }
-
-/* small clear button */
-.day-dropdown__controls-small { display:flex; align-items:center; margin-left:auto; }
-.day-dropdown__clear-filters { padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
-
-/* Event list */
-.day-dropdown__event-list { list-style:none; padding:8px; margin:0; display:flex; flex-direction:column; gap:8px; }
-
-/* Show-all link */
-.day-dropdown__show-all-link { padding:8px 12px; color:var(--color-blue-600); font-weight:700; cursor:pointer; }
-
-/* Items should fill width */
-.day-dropdown__event-list-item > .event { width:100%; box-sizing:border-box; }
-
-/* loading / empty */
-.day-dropdown__loading, .day-dropdown__empty, .day-dropdown__error { padding:8px; color:#374151; font-size:13px; }
-
-/* ---------------- Right-side All Drawer ---------------- */
-.day-dropdown__all-drawer {
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 420px;
-  height: 100vh;
-  background: transparent;
-  z-index: 1500;
-  display: flex;
-  justify-content: flex-end;
-  pointer-events: none; /* make inner panel handle events */
-}
-.day-dropdown__all-drawer-inner {
-  pointer-events: auto;
-  width: 420px;
-  height: 100vh;
-  background: #fff;
-  box-shadow: -12px 0 30px rgba(2,6,23,0.12);
-  border-left: 1px solid rgba(0,0,0,0.06);
-  display: flex;
-  flex-direction: column;
-}
-
-/* Drawer header */
-.day-dropdown__all-drawer-header {
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px;
-  border-bottom:1px solid #eef2f7;
-}
-.day-dropdown__all-drawer-title { font-weight:700; font-size:16px; }
-.day-dropdown__all-drawer-close { padding:6px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
-
-/* Drawer filters area */
-.day-dropdown__filter-bar--drawer { padding:12px; border-bottom:1px solid #f3f4f6; }
-
-/* Drawer list */
-.day-dropdown__all-list {
-  list-style:none;
-  margin:0;
-  padding:12px;
-  overflow:auto;
-  flex:1;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-/* Drawer item same rendering */
-.day-dropdown__all-list .day-dropdown__event-list-item > .event { width:100%; }
-
-/* responsive fallback smaller width */
-@media (max-width: 900px) {
-  .day-dropdown__all-drawer-inner { width: calc(100vw - 24px); }
-  .day-dropdown__all-drawer { right: 0; left: 0; justify-content:center; }
-  .day-dropdown__panel { width: calc(100vw - 32px); left: 16px; right: 16px; top: 80px; max-height: calc(100vh - 120px); }
-}
-
-/* smaller pill sizing for small screens */
-@media (max-width: 1366px) {
-  .day-dropdown__button { padding:10px 28px; font-size:15px; max-width:320px; width:calc(100% - 24px); }
-  .day-dropdown__filter { font-size:13px; min-width:96px; }
-  .month-calendar__day { min-height:56px; }
 }
