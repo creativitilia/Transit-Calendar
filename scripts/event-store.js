@@ -1,4 +1,5 @@
 import { isTheSameDay } from "./date.js";
+import { getTransitEventsForDate } from "./transit-events.js";
 
 
 export function initEventStore() {
@@ -8,7 +9,7 @@ export function initEventStore() {
     events.push(createdEvent);
     saveEventsIntoLocalStorage(events);
 
-  document.dispatchEvent(new CustomEvent("event-change", {
+    document.dispatchEvent(new CustomEvent("event-change", {
       bubbles: true
     }));
   });
@@ -20,12 +21,12 @@ export function initEventStore() {
     })
     saveEventsIntoLocalStorage(events);
 
-  document.dispatchEvent(new CustomEvent("event-change", {
+    document.dispatchEvent(new CustomEvent("event-change", {
       bubbles: true
     }));
   });
 
-    document.addEventListener("event-edit", (event) => {
+  document.addEventListener("event-edit", (event) => {
     const editedEvent = event.detail.event;
     const events = getEventsFromLocalStorage().map((event) => {
       if (event.id === editedEvent.id) {
@@ -35,18 +36,25 @@ export function initEventStore() {
     });
     saveEventsIntoLocalStorage(events);
 
-  document.dispatchEvent(new CustomEvent("event-change", {
+    document.dispatchEvent(new CustomEvent("event-change", {
       bubbles: true
     }));
   });
-
 
 
   return {
     getEventsByDate(date) {
       const events = getEventsFromLocalStorage();
       const filteredEvents = events.filter((event) => isTheSameDay(event.date, date));
-      return filteredEvents;
+
+      // Add generated transit-aspect events for this date
+      const transitEvents = getTransitEventsForDate(date);
+
+      // Make sure we do not duplicate if user created a custom event with same id
+      const existingIds = new Set(filteredEvents.map(e => e.id));
+      const merged = filteredEvents.concat(transitEvents.filter(te => !existingIds.has(te.id)));
+
+      return merged;
     }
   };
 }
