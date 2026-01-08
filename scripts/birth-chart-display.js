@@ -1,5 +1,5 @@
 // ============================================
-// BIRTH CHART DISPLAY (updated to support Current Chart display)
+// BIRTH CHART DISPLAY (supports Current Chart)
 // Displays birth chart or current chart in the sidebar
 // ============================================
 
@@ -13,7 +13,7 @@ let lastBirthChart = null;
  * @param {object} chart - Birth chart data from calculateBirthChart()
  */
 export function displayBirthChart(chart) {
-  lastBirthChart = chart; // save for later
+  lastBirthChart = chart; // save for toggle
   renderChartIntoSidebar(chart, 'Birth Chart');
 }
 
@@ -21,7 +21,6 @@ export function displayBirthChart(chart) {
  * Display a current/transit-style chart in the same sidebar UI.
  * Reuses the same rendering code so the look matches the birth chart list.
  * @param {object} chart - Chart data produced by calculateCurrentChart()
- *                         (should include planet keys like chart.sun, chart.moon, etc.)
  * @param {string} title - Optional title (defaults to "Current Chart")
  */
 export function displayCurrentChart(chart, title = 'Current Chart') {
