@@ -11,9 +11,15 @@ const openPanels = new Set();
 // Close any open panels (used to ensure single open panel)
 function closeAllPanels() {
   for (const panelInfo of Array.from(openPanels)) {
-    const { button, panel } = panelInfo;
-    button.setAttribute('aria-expanded', 'false');
-    panel.classList.remove('day-dropdown__panel--open');
+    const { button, panel, container } = panelInfo;
+    try {
+      if (button) button.setAttribute('aria-expanded', 'false');
+      if (panel) panel.classList.remove('day-dropdown__panel--open');
+      if (panel) panel.setAttribute('aria-hidden', 'true');
+      if (container) container.classList.remove('day-dropdown__container--open');
+    } catch (e) {
+      // ignore
+    }
     openPanels.delete(panelInfo);
   }
 }
@@ -61,9 +67,18 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
   loading.style.display = 'none';
   panel.appendChild(loading);
 
-  // Append to DOM (preferably inside wrapper)
-  wrapper.appendChild(toggleBtn);
-  wrapper.appendChild(panel);
+  // Create a container that will hold the pill and its expanding panel
+  const container = document.createElement('div');
+  container.className = 'day-dropdown__container';
+  container.setAttribute('role', 'group');
+  container.setAttribute('aria-label', `Day ${calendarDay.toDateString()} events`);
+
+  // Append button and panel into the container (so the panel aligns exactly with pill)
+  container.appendChild(toggleBtn);
+  container.appendChild(panel);
+
+  // Append the container to the wrapper
+  wrapper.appendChild(container);
 
   // Lazy-load flag
   let loaded = false;
@@ -84,7 +99,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
       const item = document.createElement('li');
       item.className = 'day-dropdown__event-list-item';
       // reuse initStaticEvent which expects a parent and an event
-      // but initStaticEvent will append a proper event element into our list item
+      // initStaticEvent will append a proper event element into our list item
       initStaticEvent(item, ev);
       list.appendChild(item);
     }
@@ -94,12 +109,14 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     // Close others (optional)
     closeAllPanels();
 
+    // mark open on button & container
     toggleBtn.setAttribute('aria-expanded', 'true');
     panel.classList.add('day-dropdown__panel--open');
     panel.setAttribute('aria-hidden', 'false');
+    container.classList.add('day-dropdown__container--open');
 
     // register open panel
-    openPanels.add({ button: toggleBtn, panel });
+    openPanels.add({ button: toggleBtn, panel, container });
 
     if (!loaded) {
       loading.style.display = 'block';
@@ -131,6 +148,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     toggleBtn.setAttribute('aria-expanded', 'false');
     panel.classList.remove('day-dropdown__panel--open');
     panel.setAttribute('aria-hidden', 'true');
+    container.classList.remove('day-dropdown__container--open');
 
     // remove from openPanels
     for (const info of Array.from(openPanels)) {
@@ -138,7 +156,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     }
   }
 
-    // Toggle handler (stop propagation so the wrapper's click doesn't open the create dialog)
+  // Toggle handler (stop propagation so the wrapper's click doesn't open the create dialog)
   toggleBtn.addEventListener('click', (e) => {
     e.stopPropagation(); // IMPORTANT: prevent bubble to wrapper which opens create dialog
     const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
@@ -161,9 +179,9 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     e.stopPropagation();
   });
 
-  // Close when clicking outside
+  // Close when clicking outside (but keep panel open when clicking inside container)
   document.addEventListener('click', (event) => {
-    if (!panel.contains(event.target) && event.target !== toggleBtn) {
+    if (!container.contains(event.target)) {
       if (panel.classList.contains('day-dropdown__panel--open')) closePanel();
     }
   });

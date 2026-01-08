@@ -19,30 +19,34 @@
   font-weight: 500;
 }
 
+/* keep wrapper but allow grid to grow/shrink */
 .month-calendar__day-list-wrapper{
   position: relative;
 }
 
-.month-calendar__day-list { 
+/* Use a grid with auto rows so each week row can grow independently.
+   Add small gaps to keep pills compact when closed. */
+.month-calendar__day-list {
   list-style-type: none;
-  position: relative; 
+  position: relative;
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  overflow-y: auto;
-  grid-column-gap: 12px; 
-  grid-row-gap: 12px;  
+  grid-column-gap: 12px;
+  grid-row-gap: 12px;
+  padding: 12px 8px;
 }
 
+/* Four/Five/Six week rows use auto so rows grow to content height */
 .month-calendar--four-week .month-calendar__day-list {
-  grid-template-rows: repeat(4, minmax(auto, 1fr));
+  grid-template-rows: repeat(4, auto);
 }
 
 .month-calendar--five-week .month-calendar__day-list {
-  grid-template-rows: repeat(5, minmax(auto, 1fr));
+  grid-template-rows: repeat(5, auto);
 }
 
 .month-calendar--six-week .month-calendar__day-list {
-  grid-template-rows: repeat(6, minmax(auto, 1fr));
+  grid-template-rows: repeat(6, auto);
 }
 
 .month-calendar__day {
@@ -53,6 +57,7 @@
   position: relative;
   align-items: center;
   justify-content: flex-start;
+  min-height: 48px; /* give minimum row height for compact pills */
 }
 
 .month-calendar__day--highlight {
@@ -64,17 +69,14 @@
 }
 
 .month-calendar--four-week .month-calendar__day:nth-last-child(-n+7) {
-  /* remove bottom border only for the last row */
   border-bottom: 0;
 }
 
 .month-calendar--five-week .month-calendar__day:nth-last-child(-n+7) {
-  /* remove bottom border only for the last row */
   border-bottom: 0;
 }
 
 .month-calendar--six-week .month-calendar__day:nth-last-child(-n+7) {
-  /* remove bottom border only for the last row */
   border-bottom: 0;
 }
 
@@ -87,7 +89,13 @@
   color: var(--color-text-dark);
 }
 
+/* Event wrapper becomes the area where the pill is centered */
 .month-calendar__event-list-wrapper {
   flex-grow: 1;
   padding-bottom: 1.5rem;
-} 
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+

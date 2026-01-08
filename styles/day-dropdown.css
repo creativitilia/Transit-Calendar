@@ -1,12 +1,12 @@
-/* styles/day-dropdown.css (replace existing) */
+/* Day dropdown UI + small month-grid tweaks to host the pill dropdown */
 
 /* Host cell tweaks */
 .month-calendar__day {
   border: 0; /* remove grid borders */
-  position: relative;
+  position: relative; /* required so the panel can be in-flow inside the cell */
   display: flex;
   flex-direction: column;
-  padding: 8px 6px;
+  padding: 8px 6px; /* keep internal spacing */
   background: transparent;
 }
 
@@ -15,81 +15,97 @@
   display: none !important;
 }
 
-/* Keep the cell content area where the pill sits */
+/* Event wrapper becomes the area where the pill is centered */
 .month-calendar__event-list-wrapper {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 8px; /* space for visual separation from header row */
+  padding-top: 8px; /* small top space */
   padding-bottom: 8px;
+}
+
+/* Container that holds pill and panel */
+.day-dropdown__container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 /* Pill toggle — elongated, transparent background, thin border */
 .day-dropdown__button {
   display: inline-block;
-  padding: 8px 22px;                 /* more horizontal padding to elongate */
-  border-radius: 999px;              /* fully rounded */
-  background: transparent;           /* transparent */
+  padding: 8px 22px;
+  border-radius: 999px;
+  background: transparent;
   color: var(--color-text-dark);
-  border: 1px solid rgba(0,0,0,0.12);/* thin, subtle black border */
+  border: 1px solid rgba(0,0,0,0.12);
   cursor: pointer;
   font-size: 14px;
   margin: 8px 0;
-  min-width: 96px;
-  max-width: 160px;
-  width: calc(100% - 32px);          /* occupy most of cell width */
+  width: calc(100% - 32px);   /* keep pill aligned with cell */
+  max-width: 220px;
   text-align: center;
+  transition: border-radius 120ms ease, box-shadow 120ms ease;
   box-shadow: none;
 }
 
-/* Slight hover */
 .day-dropdown__button:hover {
   background: rgba(0,0,0,0.03);
 }
 
-/* day-dropdown.css - panel in-flow and fixed max-height (scrollable) */
+/* When container is opened, button becomes the top of the expanded block:
+   remove bottom border-radius so the panel looks attached */
+.day-dropdown__container--open .day-dropdown__button {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
 
-/* remove absolute placement and instead let panel be part of normal flow */
-.day-dropdown__panel{
-  display:none;
-  position: static;                 /* in-flow: causes row height to grow */
-  margin-top: 10px;                 /* gap between pill and panel */
-  width: calc(100% - 16px);         /* fit within the cell while leaving padding */
-  background:#fff;
-  border-radius:8px;
+/* Panel in-flow, same width as the pill (fit the container) */
+.day-dropdown__panel {
+  display: none;
+  width: calc(100% - 32px);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-top: 0; /* no double border between pill and panel */
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.06);
-  max-height: 240px;                /* fixed panel size */
-  overflow:auto;                    /* scrollable content */
-  padding:6px;
-  z-index: auto;
+  max-height: 220px;
+  overflow: auto;
+  padding: 8px;
+  box-sizing: border-box;
+  margin: 0 0 8px 0;
 }
 
 /* show panel when open */
 .day-dropdown__panel--open {
-  display:block;
+  display: block;
 }
 
-/* Panel header */
+/* header */
 .day-dropdown__panel-header {
+  margin-bottom: 8px;
   font-weight: 600;
   font-size: 13px;
   color: #111827;
-  padding: 6px 8px;
-  border-bottom: 1px solid #eef2f7;
 }
 
-/* Event list */
+/* list */
 .day-dropdown__event-list {
   list-style: none;
-  padding: 8px;
+  padding: 0;
   margin: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.day-dropdown__event-list-item {
-  display: block;
+/* ensure each rendered event fills width */
+.day-dropdown__event-list-item > .event {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* loading / empty */
@@ -101,7 +117,7 @@
   font-size: 13px;
 }
 
-/* calendar background cleanup */
+/* Make the entire calendar background look cleaner */
 .month-calendar__day-list {
   background: transparent;
 }
