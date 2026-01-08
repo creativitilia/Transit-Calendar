@@ -91,3 +91,28 @@
   .day-dropdown__panel.in-cell { width: calc(100% - 16px); margin-left: 8px; margin-right: 8px; }
   .day-dropdown__all-drawer-inner { width: calc(100vw - 24px); }
 }
+
+/* Make the in-cell event list grow naturally (we show only 2 items so no inner scroll) */
+.day-dropdown__event-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: none; /* allow the list to set its natural height */
+  overflow: visible;
+}
+
+/* Ensure the in-cell panel remains a block in-flow that can push grid rows */
+.day-dropdown__panel.in-cell {
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(2,6,23,0.06);
+  box-shadow: 0 8px 24px rgba(2,6,23,0.06);
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden; /* JS will set overflow: visible when opened */
+  max-height: 0;
+  transition: max-height 220ms ease;
+}

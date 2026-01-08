@@ -1,12 +1,11 @@
-
-// Day dropdown — in-cell expandable pill with top-3 preview and "Show all" opening the right drawer
-// - Expand in-flow inside the day cell (does not overlay other pills)
-// - Shows top 3 aspects, scrollable. "Show all" opens right drawer with full list + filters.
+// Day dropdown — in-cell expandable pill with top-2 preview and "Show all" opening the right drawer
+// - Expand in-flow inside the day cell (pushes grid rows down)
+// - Shows top 2 aspects, with a "Show all" link that opens right drawer.
 
 import { initStaticEvent } from './event.js';
 import { getTransitEventsForDate } from './transit-events.js';
 
-const TOP_IN_PILL = 3;
+const TOP_IN_PILL = 2; // <-- show only 2 aspects in the in-cell dropdown
 
 let currentOpen = null; // {cellEl, panelEl, toggleBtn}
 let openDrawer = null;
@@ -103,6 +102,7 @@ function closeCurrentInCell() {
   if (!currentOpen) return;
   const { panelEl, toggleBtn } = currentOpen;
   try {
+    // animate close
     panelEl.style.maxHeight = '0px';
     panelEl.style.overflow = 'hidden';
     panelEl.classList.remove('day-dropdown__panel--open');
@@ -250,10 +250,11 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     li.textContent = 'Loading...';
     list.appendChild(li);
 
-    // measure and expand
+    // small open animation start
     requestAnimationFrame(() => {
       panelEl.classList.add('day-dropdown__panel--open');
-      panelEl.style.maxHeight = '160px'; // open to default small height immediately (will adjust after load)
+      // set temporary open so scrollHeight is measurable
+      panelEl.style.maxHeight = '160px';
     });
 
     if (!loaded) {
@@ -266,7 +267,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
       }
     }
 
-    // render top 3 only inside pill
+    // render top 2 only inside pill
     const toShow = (allTransits || []).slice(0, TOP_IN_PILL);
     list.innerHTML = '';
     renderEvents(list, toShow);
@@ -282,10 +283,12 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
       });
     } else showAll.style.display = 'none';
 
-    // clamp panel height and enable scroll
+    // IMPORTANT: expand in-flow so the cell and page grow (no inner scroll)
     requestAnimationFrame(() => {
-      panelEl.style.maxHeight = Math.min(panelEl.scrollHeight, 160) + 'px';
-      panelEl.style.overflow = 'auto';
+      // set maxHeight to measured height so the panel expands fully and pushes layout
+      panelEl.style.maxHeight = panelEl.scrollHeight + 'px';
+      // allow visible overflow now so inner content displays naturally
+      panelEl.style.overflow = 'visible';
     });
 
     // store current open
