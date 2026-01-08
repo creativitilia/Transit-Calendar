@@ -43,7 +43,7 @@
   font-size: 14px;
   margin: 8px 0;
   width: calc(100% - 32px);
-  max-width: 260px; /* slightly wider */
+  max-width: 260px; /* slightly wider for readability */
   text-align: center;
   transition: border-radius 120ms ease, box-shadow 120ms ease;
   box-shadow: none;
@@ -72,6 +72,22 @@
   padding: 0;
   box-sizing: border-box;
   margin: 0 0 8px 0;
+}
+
+/* panel fullscreen mode (applies on small screens via JS) */
+.day-dropdown__panel--fullscreen {
+  position: fixed !important;
+  left: 8px;
+  right: 8px;
+  top: 80px;
+  width: auto !important;
+  max-height: calc(100vh - 120px) !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.16) !important;
+  z-index: 1200 !important;
+  overflow: auto !important;
 }
 
 /* header */
@@ -165,4 +181,53 @@
   padding: 8px;
   color: #374151;
   font-size: 13px;
+}
+
+/* ---------- Responsive tweaks ---------- */
+/* Larger pills on medium / small screens */
+@media (max-width: 1366px) {
+  .day-dropdown__button {
+    padding: 10px 28px;
+    font-size: 15px;
+    max-width: 320px;
+    width: calc(100% - 24px);
+  }
+
+  .day-dropdown__filter {
+    font-size: 13px;
+    min-width: 96px;
+  }
+
+  .day-dropdown__filter-label {
+    font-size: 11px;
+  }
+
+  .month-calendar__day {
+    min-height: 56px; /* more vertical breathing room */
+  }
+}
+
+/* On narrow screens, open dropdown as a fullscreen drawer for readability */
+@media (max-width: 900px) {
+  .day-dropdown__button {
+    padding: 12px 28px;
+    font-size: 16px;
+    max-width: 360px;
+    width: calc(100% - 32px);
+  }
+
+  .month-calendar__day-list {
+    grid-column-gap: 8px;
+    grid-row-gap: 8px;
+    padding: 8px;
+  }
+
+  .day-dropdown__show-all-link {
+    padding-left: 12px;
+    padding-top: 6px;
+  }
+
+  .day-dropdown__filter-bar { gap: 6px; padding: 6px; }
+  .day-dropdown__filter-wrapper { min-width: 72px; }
+  .day-dropdown__filter { padding: 6px; font-size: 13px; }
 }
