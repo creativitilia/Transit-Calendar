@@ -1,4 +1,4 @@
-/* Day dropdown overlay styles (absolute panel) + compact pill */
+/* Day dropdown overlay styles + right-side "All aspects" drawer */
 
 /* Host cell tweaks */
 .month-calendar__day {
@@ -42,7 +42,7 @@
   background: rgba(0,0,0,0.03);
 }
 
-/* Overlay panel (absolute, appended to body) */
+/* Overlay panel (attached to body) */
 .day-dropdown__panel {
   position: fixed;
   top: 0;
@@ -59,11 +59,6 @@
   box-sizing: border-box;
   z-index: 1400;
   visibility: hidden;
-}
-
-/* when open we set max-height in JS */
-.day-dropdown__panel--open {
-  /* nothing here; JS controls max-height */
 }
 
 /* Panel header */
@@ -84,88 +79,89 @@
   border-bottom: 1px solid #f3f4f6;
   flex-wrap: wrap;
 }
-.day-dropdown__filter-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 84px;
-}
-.day-dropdown__filter-label {
-  font-size: 11px;
-  color: #374151;
-  font-weight: 600;
-}
-.day-dropdown__filter {
-  padding: 6px 8px;
-  font-size: 12px;
-  border-radius: 6px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-}
+.day-dropdown__filter-wrapper { display:flex; flex-direction:column; gap:4px; min-width:84px; }
+.day-dropdown__filter-label { font-size:11px; color:#374151; font-weight:600; }
+.day-dropdown__filter { padding:6px 8px; font-size:12px; border-radius:6px; border:1px solid #e5e7eb; background:#fff; }
 
-/* small clear control */
+/* small clear button */
 .day-dropdown__controls-small { display:flex; align-items:center; margin-left:auto; }
-.day-dropdown__clear-filters {
-  padding: 6px 10px;
-  font-size: 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(0,0,0,0.08);
-  background: #fff;
-  cursor: pointer;
-}
+.day-dropdown__clear-filters { padding:6px 10px; font-size:12px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
 
 /* Event list */
-.day-dropdown__event-list {
-  list-style: none;
-  padding: 8px;
-  margin: 0;
-  display:flex;
+.day-dropdown__event-list { list-style:none; padding:8px; margin:0; display:flex; flex-direction:column; gap:8px; }
+
+/* Show-all link */
+.day-dropdown__show-all-link { padding:8px 12px; color:var(--color-blue-600); font-weight:700; cursor:pointer; }
+
+/* Items should fill width */
+.day-dropdown__event-list-item > .event { width:100%; box-sizing:border-box; }
+
+/* loading / empty */
+.day-dropdown__loading, .day-dropdown__empty, .day-dropdown__error { padding:8px; color:#374151; font-size:13px; }
+
+/* ---------------- Right-side All Drawer ---------------- */
+.day-dropdown__all-drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 420px;
+  height: 100vh;
+  background: transparent;
+  z-index: 1500;
+  display: flex;
+  justify-content: flex-end;
+  pointer-events: none; /* make inner panel handle events */
+}
+.day-dropdown__all-drawer-inner {
+  pointer-events: auto;
+  width: 420px;
+  height: 100vh;
+  background: #fff;
+  box-shadow: -12px 0 30px rgba(2,6,23,0.12);
+  border-left: 1px solid rgba(0,0,0,0.06);
+  display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
-/* show-all link styled */
-.day-dropdown__show-all-link {
-  padding: 8px 12px;
-  color: var(--color-blue-600);
-  font-weight: 700;
-  cursor: pointer;
+/* Drawer header */
+.day-dropdown__all-drawer-header {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px;
+  border-bottom:1px solid #eef2f7;
+}
+.day-dropdown__all-drawer-title { font-weight:700; font-size:16px; }
+.day-dropdown__all-drawer-close { padding:6px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
+
+/* Drawer filters area */
+.day-dropdown__filter-bar--drawer { padding:12px; border-bottom:1px solid #f3f4f6; }
+
+/* Drawer list */
+.day-dropdown__all-list {
+  list-style:none;
+  margin:0;
+  padding:12px;
+  overflow:auto;
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
 }
 
-/* Items fill width */
-.day-dropdown__event-list-item > .event {
-  width: 100%;
-  box-sizing: border-box;
-}
+/* Drawer item same rendering */
+.day-dropdown__all-list .day-dropdown__event-list-item > .event { width:100%; }
 
-/* Loading / empty */
-.day-dropdown__loading,
-.day-dropdown__empty,
-.day-dropdown__error {
-  padding: 8px;
-  color: #374151;
-  font-size: 13px;
-}
-
-/* Responsive tweaks */
-@media (max-width: 1366px) {
-  .day-dropdown__button {
-    padding: 10px 28px;
-    font-size: 15px;
-    max-width: 320px;
-    width: calc(100% - 24px);
-  }
-  .day-dropdown__filter { font-size: 13px; min-width: 96px; }
-  .month-calendar__day { min-height: 56px; }
-}
-
+/* responsive fallback smaller width */
 @media (max-width: 900px) {
-  /* keep pill larger on small screens */
-  .day-dropdown__button { padding: 12px 28px; font-size: 16px; max-width: 360px; width: calc(100% - 32px); }
-
-  /* reduced grid gaps */
-  .month-calendar__day-list { grid-column-gap: 8px; grid-row-gap: 8px; padding: 8px; }
-
-  /* on very small viewports we still keep overlay but set width to near-full */
+  .day-dropdown__all-drawer-inner { width: calc(100vw - 24px); }
+  .day-dropdown__all-drawer { right: 0; left: 0; justify-content:center; }
   .day-dropdown__panel { width: calc(100vw - 32px); left: 16px; right: 16px; top: 80px; max-height: calc(100vh - 120px); }
+}
+
+/* smaller pill sizing for small screens */
+@media (max-width: 1366px) {
+  .day-dropdown__button { padding:10px 28px; font-size:15px; max-width:320px; width:calc(100% - 24px); }
+  .day-dropdown__filter { font-size:13px; min-width:96px; }
+  .month-calendar__day { min-height:56px; }
 }
