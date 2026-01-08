@@ -1,54 +1,46 @@
-/* Drawer-only Clear button — prettier, accessible, and clearly clickable */
+/* Fix vertical alignment of filters and Clear button in drawer */
+
+/* Align filter row children at their bottom edge so selects and button line up */
+.day-dropdown__all-drawer .day-dropdown__filter-bar--drawer {
+  display: flex;
+  align-items: flex-end; /* key change: align controls with selects */
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+/* Ensure each filter wrapper remains a column (label above control) */
+.day-dropdown__all-drawer .day-dropdown__filter-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+/* Normalize heights so selects and Clear share the same visual baseline */
+.day-dropdown__all-drawer .day-dropdown__filter,
 .day-dropdown__all-drawer .day-dropdown__clear-filters {
+  height: 36px;
+  min-height: 36px;
+  line-height: 36px;
+  box-sizing: border-box;
+}
+
+/* Make Clear align explicitly to the bottom of the filter row */
+.day-dropdown__all-drawer .day-dropdown__controls-small {
+  margin-left: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  border: 1px solid rgba(79,70,229,0.18);  /* soft indigo outline */
-  background: transparent;
-  color: #4f46e5; /* indigo-600 */
-  font-weight: 600;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 140ms ease, color 140ms ease, transform 80ms ease, box-shadow 140ms ease;
-  box-shadow: none;
-  pointer-events: auto;
-  z-index: 40;
+  align-self: flex-end; /* ensures the whole controls container sits on the same baseline */
 }
 
-/* Small 'x' icon on the left (uses currentColor so it matches text) */
-.day-dropdown__all-drawer .day-dropdown__clear-filters::before {
-  content: "";
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M6 18L18 6' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-size: 14px 14px;
-  background-repeat: no-repeat;
-  background-position: center;
+/* Tweak button padding so text sits centered vertically */
+.day-dropdown__all-drawer .day-dropdown__clear-filters {
+  padding: 0 12px; /* vertical centering handled by height/line-height */
 }
 
-/* Hover: filled indigo with white text */
-.day-dropdown__all-drawer .day-dropdown__clear-filters:hover {
-  background: #4f46e5;
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(79,70,229,0.12);
-}
-.day-dropdown__all-drawer .day-dropdown__clear-filters:hover::before {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6l12 12M6 18L18 6' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-}
-
-/* Focus state for keyboard users */
-.day-dropdown__all-drawer .day-dropdown__clear-filters:focus {
-  outline: none;
-  box-shadow: 0 0 0 4px rgba(79,70,229,0.12);
-  border-color: rgba(79,70,229,0.5);
-}
-
-/* Slightly smaller on very narrow screens */
-@media (max-width:420px) {
-  .day-dropdown__all-drawer .day-dropdown__clear-filters { padding: 6px 10px; font-size: 12px; gap:6px; }
-  .day-dropdown__all-drawer .day-dropdown__clear-filters::before { width:12px; height:12px; background-size:12px; }
+/* Small screens: keep same baseline alignment */
+@media (max-width: 420px) {
+  .day-dropdown__all-drawer .day-dropdown__filter-wrapper { min-width: 96px; }
+  .day-dropdown__all-drawer .day-dropdown__filter,
+  .day-dropdown__all-drawer .day-dropdown__clear-filters { height: 34px; line-height: 34px; }
 }
