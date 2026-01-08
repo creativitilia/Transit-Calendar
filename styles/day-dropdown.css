@@ -1,18 +1,93 @@
-/* add these styles (append to your day-dropdown.css) so overlay fits nicely in left gutter */
 
-.day-dropdown__overlay {
-  max-width: 100%;
+/* In-cell expandable pill and right-drawer styles */
+
+/* Pill */
+.day-dropdown__button {
+  display: inline-block;
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--color-text-dark);
+  border: 1px solid rgba(15,23,42,0.06);
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 8px 0;
+  width: auto;
+  min-width: 56px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(2,6,23,0.04);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.day-dropdown__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(2,6,23,0.06);
+}
+
+/* In-cell panel (in-flow) */
+.day-dropdown__panel.in-cell {
+  display: block;
+  width: calc(100% - 0px);
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.06);
+  padding: 6px;
+  box-sizing: border-box;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 220ms ease;
+}
+
+/* header inside in-cell panel */
+.day-dropdown__panel-header {
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 13px;
+  border-bottom: 1px solid #eef2f7;
+  margin-bottom: 8px;
+}
+
+/* Event list inside pill — vertical stacked items, scrollable */
+.day-dropdown__event-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 120px; /* limit height in-pill to avoid pushing too much */
+  overflow: auto;
+}
+
+/* each event list item contains the .event markup provided by initStaticEvent */
+.day-dropdown__event-list-item > .event {
+  width: 100%; /* full width within the pill area */
   box-sizing: border-box;
 }
 
-/* ensure a little breathing room when overlay is placed left */
-@media (min-width: 900px) {
-  .day-dropdown__overlay { padding: 10px; }
-  .day-dropdown__overlay-list { max-height: 420px; } /* allow taller list on larger layouts */
+/* show-all link in pill */
+.day-dropdown__show-all-link {
+  padding: 6px 8px;
+  color: var(--color-blue-600);
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
 }
 
-/* if overlay is in left gutter on narrow screens, clamp to viewport width */
+/* Right drawer styles (unchanged from earlier) */
+.day-dropdown__all-drawer { position: fixed; right: 0; top: 0; width: 420px; height: 100vh; background: transparent; z-index: 1500; display:flex; justify-content:flex-end; pointer-events: none; }
+.day-dropdown__all-drawer-inner { pointer-events:auto; width:420px; height:100vh; background:#fff; box-shadow:-12px 0 30px rgba(2,6,23,0.12); border-left:1px solid rgba(0,0,0,0.06); display:flex; flex-direction:column; }
+.day-dropdown__all-drawer-header { display:flex; align-items:center; justify-content:space-between; padding:12px; border-bottom:1px solid #eef2f7; }
+.day-dropdown__all-drawer-title { font-weight:700; font-size:16px; }
+.day-dropdown__all-drawer-close { padding:6px 10px; border-radius:6px; border:1px solid rgba(0,0,0,0.08); background:#fff; cursor:pointer; }
+.day-dropdown__filter-bar--drawer { padding:10px 12px; border-bottom:1px solid #f3f4f6; display:flex; gap:10px; align-items:center; }
+.day-dropdown__filter { padding:7px 8px; font-size:13px; border-radius:6px; border:1px solid #e5e7eb; background:#fff; }
+.day-dropdown__all-list { list-style:none; margin:0; padding:12px; overflow:auto; flex:1; display:flex; flex-direction:column; gap:8px; }
+
+/* small responsive adjustments */
 @media (max-width: 900px) {
-  .day-dropdown__overlay { width: calc(100vw - 24px) !important; left: 12px !important; }
-  .day-dropdown__overlay-list { max-height: 220px; }
+  .day-dropdown__panel.in-cell { width: calc(100% - 16px); margin-left: 8px; margin-right: 8px; }
+  .day-dropdown__all-drawer-inner { width: calc(100vw - 24px); }
 }
