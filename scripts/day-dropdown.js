@@ -10,7 +10,6 @@ const TOP_IN_PILL = 2; // <-- show only 2 aspects in the in-cell dropdown
 let currentOpen = null; // {cellEl, panelEl, toggleBtn}
 let openDrawer = null;
 
-/* Create the right drawer that shows the full list + filters */
 function createRightDrawer() {
   const drawer = document.createElement('div');
   drawer.className = 'day-dropdown__all-drawer';
@@ -67,16 +66,22 @@ function createRightDrawer() {
   filterBar.appendChild(aspectWrapper);
   filterBar.appendChild(controls);
 
+  // Total line right under filters (will show count and update with filters)
+  const totalLine = document.createElement('div');
+  totalLine.className = 'day-dropdown__drawer-total';
+  totalLine.textContent = ''; // filled when opening drawer
+
   const list = document.createElement('ul');
   list.className = 'day-dropdown__all-list';
 
   inner.appendChild(header);
   inner.appendChild(filterBar);
+  inner.appendChild(totalLine);
   inner.appendChild(list);
   drawer.appendChild(inner);
   document.body.appendChild(drawer);
 
-  return { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
+  return { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title, totalLine };
 }
 
 /* Render events into a UL using initStaticEvent */
@@ -115,7 +120,6 @@ function closeCurrentInCell() {
   currentOpen = null;
 }
 
-/* Open right drawer for that day with filters and full list */
 function openRightDrawer(calendarDay, allTransits) {
   // close existing drawer
   if (openDrawer) {
@@ -123,12 +127,12 @@ function openRightDrawer(calendarDay, allTransits) {
     openDrawer = null;
   }
 
-  const { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title } = createRightDrawer();
-  openDrawer = { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title };
+  const { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title, totalLine } = createRightDrawer();
+  openDrawer = { drawer, closeBtn, transitSelect, aspectSelect, clearBtn, list, title, totalLine };
 
   title.textContent = `All aspects — ${calendarDay.toDateString()}`;
 
-  // populate select options
+  // populate selects
   const transitSet = new Set();
   const aspectMap = new Map();
   for (const ev of allTransits) {
@@ -138,18 +142,18 @@ function openRightDrawer(calendarDay, allTransits) {
   }
 
   transitSelect.innerHTML = '';
-  const allP = document.createElement('option'); allP.value = 'all'; allP.textContent = 'All'; transitSelect.appendChild(allP);
+  { const o = document.createElement('option'); o.value = 'all'; o.textContent = 'All'; transitSelect.appendChild(o); }
   Array.from(transitSet).sort().forEach(val => {
     const o = document.createElement('option'); o.value = val; o.textContent = val[0].toUpperCase() + val.slice(1); transitSelect.appendChild(o);
   });
 
   aspectSelect.innerHTML = '';
-  const allA = document.createElement('option'); allA.value = 'all'; allA.textContent = 'All'; aspectSelect.appendChild(allA);
+  { const o = document.createElement('option'); o.value = 'all'; o.textContent = 'All'; aspectSelect.appendChild(o); }
   Array.from(aspectMap.keys()).sort().forEach(name => {
     const o = document.createElement('option'); o.value = name; o.textContent = `${aspectMap.get(name) || ''} ${name}`; aspectSelect.appendChild(o);
   });
 
-  function render() {
+  function renderDrawerList() {
     const tVal = transitSelect.value;
     const aVal = aspectSelect.value;
     const filtered = (allTransits || []).filter(ev => {
@@ -158,19 +162,25 @@ function openRightDrawer(calendarDay, allTransits) {
       if (aVal && aVal !== 'all' && m.aspect !== aVal) return false;
       return true;
     });
+
+    // render the filtered list
     renderEvents(list, filtered);
+
+    // update the Total line with the current filtered count
+    totalLine.textContent = `Total: ${filtered.length}`;
   }
 
-  render();
+  // initial render and total
+  renderDrawerList();
 
   closeBtn.addEventListener('click', () => {
     try { drawer.parentNode.removeChild(drawer); } catch (e) {}
     openDrawer = null;
     document.removeEventListener('click', onDocClickForDrawer);
   });
-  transitSelect.addEventListener('change', render);
-  aspectSelect.addEventListener('change', render);
-  clearBtn.addEventListener('click', () => { transitSelect.value = 'all'; aspectSelect.value = 'all'; render(); });
+  transitSelect.addEventListener('change', renderDrawerList);
+  aspectSelect.addEventListener('change', renderDrawerList);
+  clearBtn.addEventListener('click', () => { transitSelect.value = 'all'; aspectSelect.value = 'all'; renderDrawerList(); });
 
   // click outside closes
   setTimeout(() => document.addEventListener('click', onDocClickForDrawer), 0);
@@ -275,7 +285,7 @@ export function attachDayDropdown(calendarDayElement, calendarDay, eventStore) {
     // showShowAll if more than TOP_IN_PILL
     if (allTransits && allTransits.length > TOP_IN_PILL) {
       showAll.style.display = 'block';
-      showAll.textContent = `Show all... (${allTransits.length})`;
+      showAll.textContent = 'Show all';
       showAll.addEventListener('click', (e) => {
         e.stopPropagation();
         // open right drawer with full list
